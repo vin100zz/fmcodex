@@ -369,6 +369,59 @@ class MarketConfig:
     score_joueur: OfferScoreConfig
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ProgressionAgeFactorConfig:
+    age_min: int = Field(ge=0)
+    age_max: int = Field(ge=0)
+    facteur: float
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ProgressionConfig:
+    evaluation: str
+    minutes_reference_par_mois: int = Field(gt=0)
+    facteur_jeu_min: float = Field(ge=0, le=1)
+    amplitude: float = Field(ge=0)
+    bruit_ecart_type: float = Field(ge=0)
+    courbe_age: tuple[ProgressionAgeFactorConfig, ...]
+    poids_declin_par_attribut: dict[str, float]
+    plafonne_par_potentiel: bool
+    declin_plafonne: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class PotentialEstimateConfig:
+    bruit_max: float = Field(ge=0)
+    age_convergence: int = Field(ge=0)
+    facteur_reputation_observateur: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class RegenAgeRatioConfig:
+    age: int = Field(ge=0)
+    ratio: float = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class RegenGenerationConfig:
+    potentiel_min: float
+    potentiel_amplitude: float = Field(gt=0)
+    beta_alpha_nation_moyenne: float = Field(gt=0)
+    beta_beta_nation_moyenne: float = Field(gt=0)
+    ratio_niveau_sur_potentiel: tuple[RegenAgeRatioConfig, ...]
+    bruit_niveau_ecart_type: float = Field(ge=0)
+    age_min: int = Field(ge=0)
+    age_max: int = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True)
+class DemographicConfig:
+    progression: ProgressionConfig
+    potential_estimate: PotentialEstimateConfig
+    regen_generation: RegenGenerationConfig
+    position_distribution: dict[str, float]
+
+
 @dataclass(frozen=True, slots=True)
 class ManagementConfig:
     valuation: PlayerValuationConfig
@@ -394,6 +447,7 @@ class GameConfig:
     suspension_state: SuspensionStateConfig
     lineup_selection: LineupSelectionConfig
     management: ManagementConfig
+    demographics: DemographicConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

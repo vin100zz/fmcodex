@@ -10,6 +10,9 @@ class GameDate:
     month: int
     day: int
 
+    def isoformat(self) -> str:
+        return f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
+
     def add_days(self, days: int) -> GameDate:
         if days < 0:
             raise ValueError("GameDate only supports forward scheduling")

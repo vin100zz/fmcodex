@@ -35,6 +35,16 @@ from core.world.player_state import (
     roll_match_injury,
     suspension_served_events,
 )
+from core.world.demography import (
+    CareerPlayer,
+    NameEntry,
+    NationNamePool,
+    PotentialRange,
+    estimate_potential,
+    generate_regen,
+    load_nation_name_pool,
+    progress_player_month,
+)
 
 __all__ = [
     "ClubRating",
@@ -80,4 +90,12 @@ __all__ = [
     "recover_to_date",
     "roll_match_injury",
     "suspension_served_events",
+    "CareerPlayer",
+    "NameEntry",
+    "NationNamePool",
+    "PotentialRange",
+    "estimate_potential",
+    "generate_regen",
+    "load_nation_name_pool",
+    "progress_player_month",
 ]

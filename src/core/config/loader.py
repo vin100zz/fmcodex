@@ -17,6 +17,7 @@ from core.config.models import (
     InjuryStateConfig,
     LineupSelectionConfig,
     ManagementConfig,
+    DemographicConfig,
     SuspensionStateConfig,
     ImplicationConfig,
     PossessionEngineConfig,
@@ -87,6 +88,7 @@ def load_config(directory: Path) -> GameConfig:
     suspension_state = _validate_suspension_state(documents["etats"])
     lineup_selection = _validate_lineup_selection(documents["ia_gestion"])
     management = _validate_management(documents["ia_gestion"])
+    demographics = _validate_demographics(documents["demographie"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -105,6 +107,7 @@ def load_config(directory: Path) -> GameConfig:
         suspension_state=suspension_state,
         lineup_selection=lineup_selection,
         management=management,
+        demographics=demographics,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -365,6 +368,27 @@ def _market_payload(value: object) -> dict[str, object]:
         }
     except KeyError as error:
         raise ConfigError(f"Invalid ia_gestion.json market configuration: {error}") from error
+
+
+def _validate_demographics(document: object) -> DemographicConfig:
+    root = _mapping(document, "demographie.json")
+    try:
+        payload = {
+            "progression": root["progression"],
+            "potential_estimate": root["estimation_potentiel"],
+            "regen_generation": root["generation"],
+            "position_distribution": root["cible_postes"],
+        }
+        demographics = TypeAdapter(DemographicConfig).validate_python(payload)
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid demographie.json configuration: {error}") from error
+    if demographics.progression.evaluation != "mensuelle":
+        raise ConfigError("Player progression must be monthly")
+    if demographics.regen_generation.age_min > demographics.regen_generation.age_max:
+        raise ConfigError("Regen generation age bounds are invalid")
+    if abs(sum(demographics.position_distribution.values()) - 1.0) > 1e-6:
+        raise ConfigError("Demographic position distribution must sum to 1.0")
+    return demographics
 
 
 def _attribute_names(document: object) -> set[str]:
