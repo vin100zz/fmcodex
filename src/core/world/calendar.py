@@ -24,6 +24,16 @@ class GameDate:
                     year += 1
         return GameDate(year=year, month=month, day=day)
 
+    def days_until(self, other: GameDate) -> int:
+        if other < self:
+            raise ValueError("GameDate only supports forward elapsed-time calculations")
+        current = self
+        elapsed = 0
+        while current < other:
+            current = current.add_days(1)
+            elapsed += 1
+        return elapsed
+
 
 @dataclass(frozen=True, slots=True)
 class Fixture:

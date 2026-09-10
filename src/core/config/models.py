@@ -205,6 +205,50 @@ class DefaultBlockHeightConfig:
     defaut: float = Field(ge=-1, le=1)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class BlockIntensityConfig:
+    bloc_bas: float = Field(gt=0)
+    equilibre: float = Field(gt=0)
+    pressing_haut: float = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class FatigueStateConfig:
+    initiale: float = Field(ge=0, le=1)
+    consommation_par_minute: float = Field(gt=0)
+    resistance_base: float = Field(gt=0)
+    resistance_facteur_endurance: float = Field(ge=0)
+    intensite_par_hauteur_bloc: BlockIntensityConfig
+    recuperation_base_par_jour: float = Field(ge=0)
+    recuperation_facteur_endurance: float = Field(ge=0)
+    facteur_age_jeune: float = Field(gt=0)
+    seuil_age_jeune: int = Field(ge=0)
+    facteur_age_vieux: float = Field(gt=0)
+    seuil_age_vieux: int = Field(ge=0)
+    seuil_alerte: float = Field(ge=0, le=1)
+    fatigue_retour_de_blessure: float = Field(ge=0, le=1)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class InjurySeverityConfig:
+    nom: str
+    part: float = Field(gt=0)
+    jours_min: int = Field(gt=0)
+    jours_max: int = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class InjuryStateConfig:
+    probabilite_base_par_possession: float = Field(ge=0, le=1)
+    facteur_fatigue_max: float = Field(gt=0)
+    fragilite_min: float = Field(gt=0)
+    fragilite_max: float = Field(gt=0)
+    probabilite_quotidienne_hors_match: float = Field(ge=0, le=1)
+    gravites: tuple[InjurySeverityConfig, ...]
+    fatigue_retour_de_blessure: float = Field(ge=0, le=1)
+    forme_retour_de_blessure: float = Field(gt=0)
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
@@ -216,6 +260,8 @@ class GameConfig:
     morale_match_amplitude: float
     initial_player_state: InitialPlayerStateConfig
     default_block_height: DefaultBlockHeightConfig
+    fatigue_state: FatigueStateConfig
+    injury_state: InjuryStateConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

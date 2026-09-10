@@ -25,3 +25,4 @@ class CalendarTests(unittest.TestCase):
     def test_game_date_handles_a_leap_day(self) -> None:
         self.assertEqual(GameDate(2028, 2, 28).add_days(1), GameDate(2028, 2, 29))
         self.assertEqual(GameDate(2027, 2, 28).add_days(1), GameDate(2027, 3, 1))
+        self.assertEqual(GameDate(2026, 8, 10).days_until(GameDate(2026, 8, 17)), 7)

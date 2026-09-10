@@ -12,7 +12,9 @@ from core.config.models import (
     AttributeBoundsConfig,
     GameConfig,
     DefaultBlockHeightConfig,
+    FatigueStateConfig,
     InitialPlayerStateConfig,
+    InjuryStateConfig,
     ImplicationConfig,
     PossessionEngineConfig,
     WorldConfig,
@@ -77,6 +79,8 @@ def load_config(directory: Path) -> GameConfig:
     morale_match_amplitude = _validate_morale_amplitude(documents["etats"])
     initial_player_state = _validate_initial_player_state(documents["etats"])
     default_block_height = _validate_default_block_height(documents["formations"])
+    fatigue_state = _validate_fatigue_state(documents["etats"])
+    injury_state = _validate_injury_state(documents["etats"], fatigue_state)
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -90,6 +94,8 @@ def load_config(directory: Path) -> GameConfig:
         morale_match_amplitude=morale_match_amplitude,
         initial_player_state=initial_player_state,
         default_block_height=default_block_height,
+        fatigue_state=fatigue_state,
+        injury_state=injury_state,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -235,6 +241,41 @@ def _validate_default_block_height(document: object) -> DefaultBlockHeightConfig
     if height.min > height.max or not height.min <= height.defaut <= height.max:
         raise ConfigError("Default block height must be within configured bounds")
     return height
+
+
+def _validate_fatigue_state(document: object) -> FatigueStateConfig:
+    root = _mapping(document, "etats.json")
+    try:
+        return TypeAdapter(FatigueStateConfig).validate_python(root["fatigue"])
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid etats.json fatigue configuration: {error}") from error
+
+
+def _validate_injury_state(document: object, fatigue: FatigueStateConfig) -> InjuryStateConfig:
+    root = _mapping(document, "etats.json")
+    try:
+        injuries = _mapping(root["blessures"], "etats.blessures")
+        payload = {
+            key: injuries[key]
+            for key in (
+                "probabilite_base_par_possession",
+                "facteur_fatigue_max",
+                "fragilite_min",
+                "fragilite_max",
+                "probabilite_quotidienne_hors_match",
+                "gravites",
+                "forme_retour_de_blessure",
+            )
+        }
+        payload["fatigue_retour_de_blessure"] = fatigue.fatigue_retour_de_blessure
+        state = TypeAdapter(InjuryStateConfig).validate_python(payload)
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid etats.json injury configuration: {error}") from error
+    if abs(sum(item.part for item in state.gravites) - 1.0) > 1e-6:
+        raise ConfigError("Injury severity shares must sum to 1.0")
+    if any(item.jours_min > item.jours_max for item in state.gravites):
+        raise ConfigError("Injury severity duration bounds are invalid")
+    return state
 
 
 def _attribute_names(document: object) -> set[str]:

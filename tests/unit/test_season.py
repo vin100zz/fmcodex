@@ -5,9 +5,12 @@ import unittest
 from core.config import load_config
 from core.world import (
     competition_standings,
+    create_initial_player_states,
     create_season_plan,
     import_source_data,
     play_round,
+    play_round_with_player_states,
+    recover_between_rounds,
     synthesize_active_players,
 )
 
@@ -22,6 +25,7 @@ class SeasonTests(unittest.TestCase):
         imported = import_source_data(WORKSPACE / "data", cls.config)
         players = synthesize_active_players(imported, cls.config, Random(20260910))
         cls.plan = create_season_plan(imported, players, cls.config, Random(20260910))
+        cls.player_states = create_initial_player_states(players, cls.config, Random(20260910))
 
     def test_plan_contains_every_v1_fixture(self) -> None:
         self.assertEqual(len(self.plan.competitions), 5)
@@ -38,3 +42,35 @@ class SeasonTests(unittest.TestCase):
             self.assertEqual(len(participants), len(set(participants)))
             table = competition_standings(competition, played.fixtures, self.config)
             self.assertEqual(sum(row.played for row in table), len(fixtures) * 2)
+
+    def test_stateful_round_applies_match_fatigue(self) -> None:
+        result = play_round_with_player_states(
+            self.plan,
+            round_number=1,
+            player_states=self.player_states,
+            config=self.config,
+            rng=Random(7),
+        )
+
+        self.assertEqual(len(result.played_round.fixtures), 48)
+        self.assertTrue(any(state.fatigue < 1.0 for state in result.player_states.values()))
+        self.assertTrue(all(state.fatigue == 1.0 for state in self.player_states.values()))
+
+    def test_players_recover_between_scheduled_rounds(self) -> None:
+        played = play_round_with_player_states(
+            self.plan,
+            round_number=1,
+            player_states=self.player_states,
+            config=self.config,
+            rng=Random(7),
+        )
+        recovered, events = recover_between_rounds(
+            self.plan,
+            completed_round=1,
+            next_round=2,
+            player_states=played.player_states,
+            config=self.config,
+        )
+
+        self.assertTrue(events)
+        self.assertTrue(all(recovered[player_id].fatigue >= state.fatigue for player_id, state in played.player_states.items()))

@@ -10,6 +10,14 @@ from core.world.calendar import Fixture, GameDate, generate_double_round_robin
 from core.world.importer import ImportReport
 from core.world.standings import PlayedMatch, StandingRow, calculate_standings
 from core.world.synthesis import GeneratedPlayer, build_lineup
+from core.world.player_state import (
+    PlayerState,
+    PlayerStateEvent,
+    apply_player_conditions,
+    apply_player_state_events,
+    fatigue_events_for_lineup,
+    recover_to_date,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +57,13 @@ class PlayedFixture:
 class PlayedRound:
     round_number: int
     fixtures: tuple[PlayedFixture, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class StatefulPlayedRound:
+    played_round: PlayedRound
+    player_states: dict[int, PlayerState]
+    events: tuple[PlayerStateEvent, ...]
 
 
 def create_season_plan(
@@ -126,6 +141,53 @@ def play_round(plan: SeasonPlan, round_number: int, config: GameConfig, rng: Ran
     return PlayedRound(round_number=round_number, fixtures=tuple(played))
 
 
+def play_round_with_player_states(
+    plan: SeasonPlan,
+    round_number: int,
+    player_states: dict[int, PlayerState],
+    config: GameConfig,
+    rng: Random,
+) -> StatefulPlayedRound:
+    """Play a round and apply its match-fatigue events in one reducer pass."""
+    if round_number < 1 or round_number > plan.round_count:
+        raise ValueError(f"Round {round_number} does not exist")
+    engine = PossessionMatchEngine(config)
+    played: list[PlayedFixture] = []
+    events: list[PlayerStateEvent] = []
+    for competition in plan.competitions:
+        for fixture in competition.fixtures:
+            if fixture.round_number != round_number:
+                continue
+            home = apply_player_conditions(plan.lineups[fixture.home_club_id], player_states, fixture.date)
+            away = apply_player_conditions(plan.lineups[fixture.away_club_id], player_states, fixture.date)
+            result = engine.simulate(home=home, away=away, rng=rng)
+            played.append(PlayedFixture(fixture=fixture, result=result))
+            events.extend(fatigue_events_for_lineup(home, config))
+            events.extend(fatigue_events_for_lineup(away, config))
+    round_result = PlayedRound(round_number=round_number, fixtures=tuple(played))
+    return StatefulPlayedRound(
+        played_round=round_result,
+        player_states=apply_player_state_events(player_states, tuple(events), config),
+        events=tuple(events),
+    )
+
+
+def recover_between_rounds(
+    plan: SeasonPlan,
+    completed_round: int,
+    next_round: int,
+    player_states: dict[int, PlayerState],
+    config: GameConfig,
+) -> tuple[dict[int, PlayerState], tuple[PlayerStateEvent, ...]]:
+    """Recover all player conditions from one scheduled round date to the next."""
+    return recover_to_date(
+        player_states,
+        current_date=_round_date(plan, completed_round),
+        target_date=_round_date(plan, next_round),
+        config=config,
+    )
+
+
 def competition_standings(
     competition: ScheduledCompetition, played_fixtures: tuple[PlayedFixture, ...], config: GameConfig
 ) -> tuple[StandingRow, ...]:
@@ -135,3 +197,11 @@ def competition_standings(
         if played.fixture.competition_id == competition.id
     )
     return calculate_standings(competition.club_ids, matches, config.world.saison)
+
+
+def _round_date(plan: SeasonPlan, round_number: int) -> GameDate:
+    for competition in plan.competitions:
+        for fixture in competition.fixtures:
+            if fixture.round_number == round_number:
+                return fixture.date
+    raise ValueError(f"Round {round_number} does not exist")
