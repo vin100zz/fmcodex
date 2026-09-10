@@ -3,12 +3,15 @@ from random import Random
 import unittest
 
 from core.config import load_config
+from core.engine import MatchEvent
 from core.world import (
     GameDate,
     PlayerState,
     apply_player_state_events,
+    disciplinary_events,
     fatigue_events_for_lineup,
     recovery_events,
+    suspension_served_events,
 )
 from benchmarks.synthetic import synthetic_lineup
 
@@ -41,3 +44,44 @@ class PlayerStateTests(unittest.TestCase):
 
         self.assertGreater(updated[1].fatigue, states[1].fatigue)
         self.assertEqual(states[1].fatigue, 0.4)
+
+    def test_two_yellows_create_a_suspension(self) -> None:
+        states = {1: PlayerState(fatigue=1.0, form=1.0, morale=0.6, fragility=1.0)}
+        cards = tuple(
+            MatchEvent(
+                second=second,
+                kind="yellow_card",
+                club_id=1,
+                primary_player_id=1,
+                secondary_player_id=None,
+                zone="middle",
+                lane="central",
+            )
+            for second in (60, 80)
+        )
+
+        events = disciplinary_events(cards, states, self.config, Random(7))
+        updated = apply_player_state_events(states, events, self.config)
+
+        self.assertEqual(updated[1].yellow_cards, 2)
+        self.assertEqual(
+            updated[1].suspension_matches_remaining,
+            self.config.suspension_state.matches_double_jaune,
+        )
+        self.assertFalse(updated[1].is_available(GameDate(2026, 8, 10)))
+
+    def test_serving_a_suspension_restores_availability(self) -> None:
+        states = {
+            1: PlayerState(
+                fatigue=1.0,
+                form=1.0,
+                morale=0.6,
+                fragility=1.0,
+                suspension_matches_remaining=1,
+            )
+        }
+
+        events = suspension_served_events((1,), states)
+        updated = apply_player_state_events(states, events, self.config)
+
+        self.assertTrue(updated[1].is_available(GameDate(2026, 8, 10)))

@@ -173,6 +173,14 @@ class TurnoverConfig:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class CardConfig:
+    probabilite_jaune_par_turnover_defensif: float = Field(ge=0, le=1)
+    probabilite_rouge_direct_par_turnover_defensif: float = Field(ge=0, le=1)
+    poids_zone_defense: float = Field(ge=0)
+    poids_agressivite_tacle: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
 class PossessionEngineConfig:
     chronologie: ChronologyConfig
     transitions: TransitionConfig
@@ -180,6 +188,7 @@ class PossessionEngineConfig:
     couloirs: LaneConfig
     occasion: ChanceConfig
     turnover: TurnoverConfig
+    cartons: CardConfig
 
 
 @dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
@@ -249,6 +258,21 @@ class InjuryStateConfig:
     forme_retour_de_blessure: float = Field(gt=0)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class YellowThresholdConfig:
+    jaunes: int = Field(gt=0)
+    matches: int = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class SuspensionStateConfig:
+    matches_rouge_min: int = Field(gt=0)
+    matches_rouge_max: int = Field(gt=0)
+    matches_double_jaune: int = Field(gt=0)
+    seuils_cumul_jaunes: tuple[YellowThresholdConfig, ...]
+    remise_a_zero_fin_saison: bool
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
@@ -262,6 +286,7 @@ class GameConfig:
     default_block_height: DefaultBlockHeightConfig
     fatigue_state: FatigueStateConfig
     injury_state: InjuryStateConfig
+    suspension_state: SuspensionStateConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

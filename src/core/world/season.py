@@ -15,8 +15,11 @@ from core.world.player_state import (
     PlayerStateEvent,
     apply_player_conditions,
     apply_player_state_events,
+    disciplinary_events,
     fatigue_events_for_lineup,
     recover_to_date,
+    roll_match_injury,
+    suspension_served_events,
 )
 
 
@@ -33,6 +36,7 @@ class SeasonPlan:
     start_date: GameDate
     competitions: tuple[ScheduledCompetition, ...]
     lineups: dict[int, Lineup]
+    players: dict[int, GeneratedPlayer]
 
     @property
     def round_count(self) -> int:
@@ -115,7 +119,7 @@ def create_season_plan(
         )
         for club_id in (club.id for club in report.clubs if club.status.value == "active")
     }
-    return SeasonPlan(start_date=start_date, competitions=tuple(competitions), lineups=lineups)
+    return SeasonPlan(start_date=start_date, competitions=tuple(competitions), lineups=lineups, players=players)
 
 
 def play_round(plan: SeasonPlan, round_number: int, config: GameConfig, rng: Random) -> PlayedRound:
@@ -158,12 +162,41 @@ def play_round_with_player_states(
         for fixture in competition.fixtures:
             if fixture.round_number != round_number:
                 continue
-            home = apply_player_conditions(plan.lineups[fixture.home_club_id], player_states, fixture.date)
-            away = apply_player_conditions(plan.lineups[fixture.away_club_id], player_states, fixture.date)
+            home = _available_lineup(plan, fixture.home_club_id, player_states, fixture.date, config)
+            away = _available_lineup(plan, fixture.away_club_id, player_states, fixture.date, config)
             result = engine.simulate(home=home, away=away, rng=rng)
             played.append(PlayedFixture(fixture=fixture, result=result))
             events.extend(fatigue_events_for_lineup(home, config))
             events.extend(fatigue_events_for_lineup(away, config))
+            events.extend(disciplinary_events(result.events, player_states, config, rng))
+            involved = {player.id: player for player in (*home.players, *away.players)}
+            injured: set[int] = set()
+            for player_id in result.involved_player_ids:
+                if player_id in injured:
+                    continue
+                injury = roll_match_injury(
+                    player=involved[player_id],
+                    state=player_states[player_id],
+                    date=fixture.date,
+                    config=config,
+                    rng=rng,
+                    block_height=home.block_height if player_id in {player.id for player in home.players} else away.block_height,
+                )
+                if injury is not None:
+                    events.append(injury)
+                    injured.add(player_id)
+            events.extend(
+                suspension_served_events(
+                    tuple(player.id for player in plan.players.values() if player.club_id == fixture.home_club_id),
+                    player_states,
+                )
+            )
+            events.extend(
+                suspension_served_events(
+                    tuple(player.id for player in plan.players.values() if player.club_id == fixture.away_club_id),
+                    player_states,
+                )
+            )
     round_result = PlayedRound(round_number=round_number, fixtures=tuple(played))
     return StatefulPlayedRound(
         played_round=round_result,
@@ -205,3 +238,26 @@ def _round_date(plan: SeasonPlan, round_number: int) -> GameDate:
             if fixture.round_number == round_number:
                 return fixture.date
     raise ValueError(f"Round {round_number} does not exist")
+
+
+def _available_lineup(
+    plan: SeasonPlan,
+    club_id: int,
+    states: dict[int, PlayerState],
+    date: GameDate,
+    config: GameConfig,
+) -> Lineup:
+    available = frozenset(
+        player_id
+        for player_id, player in plan.players.items()
+        if player.club_id == club_id and states[player_id].is_available(date)
+    )
+    lineup = build_lineup(
+        club_id=club_id,
+        players=plan.players,
+        config=config,
+        formation=config.world.importation.formation_initiale,
+        block_height=config.default_block_height.defaut,
+        available_player_ids=available,
+    )
+    return apply_player_conditions(lineup, states, date)

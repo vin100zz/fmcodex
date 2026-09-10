@@ -77,6 +77,7 @@ class PossessionMatchResult:
     events: tuple[MatchEvent, ...]
     home_stats: TeamMatchStats
     away_stats: TeamMatchStats
+    involved_player_ids: tuple[int, ...]
 
 
 @dataclass(slots=True)
@@ -104,6 +105,7 @@ class _PossessionStart:
 class _PossessionResolution:
     events: tuple[MatchEvent, ...]
     turnover_zone: int
+    involved_player_id: int
 
 
 class PossessionMatchEngine:
@@ -122,6 +124,7 @@ class PossessionMatchEngine:
         home_stats = _MutableStats()
         away_stats = _MutableStats()
         events: list[MatchEvent] = []
+        involved_player_ids: list[int] = []
         home_goals = away_goals = 0
         current_second = 0
         stoppages = 0
@@ -142,6 +145,7 @@ class PossessionMatchEngine:
                 rng=rng,
             )
             events.extend(resolution.events)
+            involved_player_ids.append(resolution.involved_player_id)
             for event in resolution.events:
                 if event.kind == "shot":
                     stats.shots += 1
@@ -170,6 +174,7 @@ class PossessionMatchEngine:
                 rng=rng,
             )
             events.extend(resolution.events)
+            involved_player_ids.append(resolution.involved_player_id)
             for event in resolution.events:
                 if event.kind == "shot":
                     stats.shots += 1
@@ -187,6 +192,7 @@ class PossessionMatchEngine:
             events=tuple(events),
             home_stats=home_stats.freeze(),
             away_stats=away_stats.freeze(),
+            involved_player_ids=tuple(involved_player_ids),
         )
 
     def _play_possession(
@@ -200,6 +206,7 @@ class PossessionMatchEngine:
     ) -> _PossessionResolution:
         zone_index = start.start_zone
         lane_index = self._choose_lane(attacking, defending, zone_index, rng)
+        involved_player = self._select_player(attacking.players, zone_index, lane_index, rng)
         final_zone = len(self._zones) - 1
         while zone_index < final_zone:
             attack_note = self._zone_note(attacking, zone_index, lane_index, "progression_attaque")
@@ -209,7 +216,11 @@ class PossessionMatchEngine:
                 defense_note -= self._engine.turnover.malus_defensif_couloir_concerne
             bias = self._engine.transitions.bonus_domicile if attacking_is_home else 0.0
             if not _success(self._engine.transitions.k_prog * (attack_note - defense_note) + bias, rng):
-                return _PossessionResolution(events=(), turnover_zone=zone_index)
+                return _PossessionResolution(
+                    events=self._card_events(defending, zone_index, lane_index, second, rng),
+                    turnover_zone=zone_index,
+                    involved_player_id=involved_player.id,
+                )
             zone_index += 1
             lane_index = self._maybe_change_lane(attacking, lane_index, rng)
 
@@ -218,11 +229,39 @@ class PossessionMatchEngine:
         if start.counter_attack:
             defense_note -= self._engine.turnover.malus_defensif_contre
         if not _success(self._engine.transitions.k_occ * (attack_note - defense_note), rng):
-            return _PossessionResolution(events=(), turnover_zone=zone_index)
+            return _PossessionResolution(
+                events=self._card_events(defending, zone_index, lane_index, second, rng),
+                turnover_zone=zone_index,
+                involved_player_id=involved_player.id,
+            )
         return _PossessionResolution(
             events=self._resolve_chance(attacking, defending, zone_index, lane_index, start.counter_attack, second, rng),
             turnover_zone=-1,
+            involved_player_id=involved_player.id,
         )
+
+    def _card_events(
+        self, defending: Lineup, zone_index: int, lane_index: int, second: int, rng: Random
+    ) -> tuple[MatchEvent, ...]:
+        defender = self._select_player(defending.players, zone_index, lane_index, rng)
+        zone_factor = self._engine.cartons.poids_zone_defense if zone_index == 0 else 1.0
+        yellow_probability = (
+            self._engine.cartons.probabilite_jaune_par_turnover_defensif
+            * zone_factor
+            * (1 + self._engine.cartons.poids_agressivite_tacle * defender.attributes.tacle)
+        )
+        direct_red_probability = self._engine.cartons.probabilite_rouge_direct_par_turnover_defensif * zone_factor
+        zone = self._zones[zone_index]
+        lane = self._lanes[lane_index]
+        if rng.random() < direct_red_probability:
+            return (
+                MatchEvent(second, "red_card", defending.club_id, defender.id, None, zone, lane),
+            )
+        if rng.random() < min(1.0, yellow_probability):
+            return (
+                MatchEvent(second, "yellow_card", defending.club_id, defender.id, None, zone, lane),
+            )
+        return ()
 
     def _zone_note(self, lineup: Lineup, zone_index: int, lane_index: int, composite: str) -> float:
         defensive_phase = composite.endswith("defense")

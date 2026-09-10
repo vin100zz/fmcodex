@@ -15,6 +15,7 @@ from core.config.models import (
     FatigueStateConfig,
     InitialPlayerStateConfig,
     InjuryStateConfig,
+    SuspensionStateConfig,
     ImplicationConfig,
     PossessionEngineConfig,
     WorldConfig,
@@ -81,6 +82,7 @@ def load_config(directory: Path) -> GameConfig:
     default_block_height = _validate_default_block_height(documents["formations"])
     fatigue_state = _validate_fatigue_state(documents["etats"])
     injury_state = _validate_injury_state(documents["etats"], fatigue_state)
+    suspension_state = _validate_suspension_state(documents["etats"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -96,6 +98,7 @@ def load_config(directory: Path) -> GameConfig:
         default_block_height=default_block_height,
         fatigue_state=fatigue_state,
         injury_state=injury_state,
+        suspension_state=suspension_state,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -176,7 +179,7 @@ def _validate_attribute_bounds(document: object) -> AttributeBoundsConfig:
 
 def _validate_possession_engine(document: object) -> PossessionEngineConfig:
     root = _mapping(document, "moteur_match.json")
-    required = ("chronologie", "transitions", "densite", "couloirs", "occasion", "turnover")
+    required = ("chronologie", "transitions", "densite", "couloirs", "occasion", "turnover", "cartons")
     try:
         payload = {key: root[key] for key in required}
         return TypeAdapter(PossessionEngineConfig).validate_python(payload)
@@ -275,6 +278,17 @@ def _validate_injury_state(document: object, fatigue: FatigueStateConfig) -> Inj
         raise ConfigError("Injury severity shares must sum to 1.0")
     if any(item.jours_min > item.jours_max for item in state.gravites):
         raise ConfigError("Injury severity duration bounds are invalid")
+    return state
+
+
+def _validate_suspension_state(document: object) -> SuspensionStateConfig:
+    root = _mapping(document, "etats.json")
+    try:
+        state = TypeAdapter(SuspensionStateConfig).validate_python(root["suspensions"])
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid etats.json suspension configuration: {error}") from error
+    if state.matches_rouge_min > state.matches_rouge_max:
+        raise ConfigError("Red-card suspension bounds are invalid")
     return state
 
 

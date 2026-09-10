@@ -1,5 +1,6 @@
 from pathlib import Path
 from random import Random
+from dataclasses import replace
 import unittest
 
 from core.config import load_config
@@ -12,6 +13,7 @@ from core.world import (
     play_round_with_player_states,
     recover_between_rounds,
     synthesize_active_players,
+    SuspensionServed,
 )
 
 
@@ -73,4 +75,36 @@ class SeasonTests(unittest.TestCase):
         )
 
         self.assertTrue(events)
-        self.assertTrue(all(recovered[player_id].fatigue >= state.fatigue for player_id, state in played.player_states.items()))
+        available_before_recovery = (
+            player_id
+            for player_id, state in played.player_states.items()
+            if state.injury is None
+        )
+        self.assertTrue(
+            all(
+                recovered[player_id].fatigue >= played.player_states[player_id].fatigue
+                for player_id in available_before_recovery
+            )
+        )
+        self.assertTrue(all(0.0 <= state.fatigue <= 1.0 for state in recovered.values()))
+
+    def test_suspended_player_is_replaced_and_serves_the_round(self) -> None:
+        suspended_player = self.plan.lineups[next(iter(self.plan.lineups))].players[0]
+        states = dict(self.player_states)
+        states[suspended_player.id] = replace(
+            states[suspended_player.id], suspension_matches_remaining=1
+        )
+
+        result = play_round_with_player_states(
+            self.plan,
+            round_number=1,
+            player_states=states,
+            config=self.config,
+            rng=Random(7),
+        )
+
+        self.assertEqual(result.player_states[suspended_player.id].suspension_matches_remaining, 0)
+        self.assertIn(
+            suspended_player.id,
+            {event.player_id for event in result.events if isinstance(event, SuspensionServed)},
+        )

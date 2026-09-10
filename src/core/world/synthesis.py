@@ -59,10 +59,15 @@ def build_lineup(
     config: GameConfig,
     formation: str,
     block_height: float,
+    available_player_ids: frozenset[int] | None = None,
 ) -> Lineup:
     """Select a deterministic best available eleven for one configured formation."""
     formation_positions = _formation_positions(config, formation)
-    candidates = [player for player in players.values() if player.club_id == club_id]
+    candidates = [
+        player
+        for player in players.values()
+        if player.club_id == club_id and (available_player_ids is None or player.id in available_player_ids)
+    ]
     if len(candidates) < len(formation_positions):
         raise ValueError(f"Club {club_id} does not have enough generated players")
     available = {player.id: player for player in candidates}
