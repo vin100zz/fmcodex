@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api.persistence import list_slots, load_session, save_session
@@ -136,6 +137,10 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
     def slots() -> list[str]:
         return list(list_slots(saves_directory))
 
+    web_directory = workspace / "web"
+    if web_directory.is_dir():
+        app.mount("/", StaticFiles(directory=web_directory, html=True), name="web")
+
     return app
 
 
@@ -143,3 +148,7 @@ def _slot_path(directory: Path, slot: str) -> Path:
     if not slot or slot != Path(slot).name or any(character in slot for character in "\\/"):
         raise HTTPException(status_code=422, detail="Invalid save slot")
     return directory / f"{slot}.json.gz"
+
+
+def create_default_app() -> FastAPI:
+    return create_app(Path(__file__).resolve().parents[2])

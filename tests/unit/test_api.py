@@ -21,6 +21,7 @@ class ApiTests(unittest.TestCase):
         calendar = self.client.get("/api/competitions/16/calendrier", params={"journee": 1})
         match = self.client.get(f"/api/matches/{calendar.json()[0]['id']}")
         players = self.client.get("/api/joueurs", params={"poste": "BU", "niveau_min": 50})
+        home = self.client.get("/")
 
         self.assertEqual(state.status_code, 200)
         self.assertEqual(len(clubs.json()), 18)
@@ -28,3 +29,4 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(match.status_code, 200)
         self.assertIn("events", match.json())
         self.assertTrue(players.json())
+        self.assertIn("Touchline", home.text)

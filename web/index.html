@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Touchline — Football Manager Light</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#dashboard"><span>TL</span> Touchline</a>
+    <nav>
+      <a href="#dashboard" data-view="dashboard">Vue d’ensemble</a>
+      <a href="#competitions" data-view="competitions">Compétitions</a>
+      <a href="#clubs" data-view="clubs">Clubs</a>
+      <a href="#joueurs" data-view="joueurs">Joueurs</a>
+    </nav>
+    <div class="sidebar-note">Mode observateur<br><strong>Football Manager Light</strong></div>
+  </aside>
+  <main>
+    <header class="topbar">
+      <div><p class="eyebrow">PARTIE EN COURS</p><h1 id="page-title">Vue d’ensemble</h1></div>
+      <div class="game-clock"><strong id="game-date">—</strong><span id="season-label">—</span></div>
+      <div class="actions"><button class="ghost" id="advance-day">+1 jour</button><button id="advance-round">Jouer la journée</button></div>
+    </header>
+    <section id="app" aria-live="polite"><div class="loading">Chargement du monde…</div></section>
+  </main>
+  <template id="error-template"><div class="empty"><h2>Connexion impossible</h2><p>Vérifiez que le serveur est démarré puis actualisez la page.</p></div></template>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
