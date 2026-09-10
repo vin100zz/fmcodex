@@ -59,6 +59,7 @@
     "_note": "Moteur Poisson de reference",
     "buts_attendus_base": 1.35,
     "sensibilite_ecart_force": 0.028,
-    "bonus_domicile_buts": 0.30
+    "bonus_domicile_buts": 0.30,
+    "buts_attendus_min": 0.05
   }
 }
