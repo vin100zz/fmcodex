@@ -31,6 +31,16 @@ class GameSessionTests(unittest.TestCase):
         statistics = self.session.competition_statistics(16, "tirs")
         self.assertTrue(statistics)
         self.assertTrue(all(item["matches"] > 0 for item in statistics))
+        match = self.session.match_detail(calendar[0]["id"])
+        self.assertEqual(match["id"], calendar[0]["id"])
+        player = self.session.player_detail(roster[0]["id"])
+        self.assertEqual(player["id"], roster[0]["id"])
+
+    def test_club_catalog_includes_active_and_dormant_source_clubs(self) -> None:
+        clubs = self.session.clubs()
+
+        self.assertGreater(len(clubs), 96)
+        self.assertEqual(len(self.session.clubs(competition_id=16)), 18)
 
     def test_cannot_start_a_new_season_before_the_current_one_ends(self) -> None:
         fresh_session = GameSession.create(WORKSPACE / "config", WORKSPACE / "data", seed=8)

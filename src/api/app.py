@@ -46,6 +46,17 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
     def competitions() -> list[dict[str, object]]:
         return session.competition_summaries()
 
+    @app.get("/api/clubs")
+    def clubs(competition: int | None = None, recherche: str | None = None) -> list[dict[str, object]]:
+        return session.clubs(competition_id=competition, search=recherche)
+
+    @app.get("/api/clubs/{club_id}")
+    def club(club_id: int) -> dict[str, object]:
+        try:
+            return session.club_summary(club_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Club not found") from error
+
     @app.get("/api/competitions/{competition_id}/classement")
     def standings(competition_id: int) -> list[dict[str, object]]:
         try:
@@ -75,6 +86,33 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
             return session.club_roster(club_id)
         except KeyError as error:
             raise HTTPException(status_code=404, detail="Active club not found") from error
+
+    @app.get("/api/joueurs/{player_id}")
+    def player(player_id: int) -> dict[str, object]:
+        try:
+            return session.player_detail(player_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Active player not found") from error
+
+    @app.get("/api/joueurs")
+    def players(
+        poste: str | None = None, club: int | None = None, niveau_min: int | None = None
+    ) -> list[dict[str, object]]:
+        return session.players(position=poste, club_id=club, minimum_overall=niveau_min)
+
+    @app.get("/api/clubs/{club_id}/calendrier")
+    def club_calendar(club_id: int) -> list[dict[str, object]]:
+        try:
+            return session.club_calendar(club_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Active club not found") from error
+
+    @app.get("/api/matches/{fixture_id}")
+    def match(fixture_id: int) -> dict[str, object]:
+        try:
+            return session.match_detail(fixture_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Match not played") from error
 
     @app.post("/api/partie/sauvegarder")
     def save(request: SlotRequest) -> dict[str, str]:

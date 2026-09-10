@@ -151,6 +151,49 @@ class GameSession:
             for competition in self.plan.competitions
         ]
 
+    def clubs(self, competition_id: int | None = None, search: str | None = None) -> list[dict[str, object]]:
+        active_competitions = {
+            club_id: competition.id
+            for competition in self.plan.competitions
+            for club_id in competition.club_ids
+        }
+        needle = (search or "").casefold()
+        return [
+            {
+                "id": club.id,
+                "name": club.name,
+                "nation": club.nation_source,
+                "status": club.status.value,
+                "competition_id": active_competitions.get(club.id),
+            }
+            for club in self.import_report.clubs
+            if (competition_id is None or active_competitions.get(club.id) == competition_id)
+            and (not needle or needle in club.name.casefold())
+        ]
+
+    def club_summary(self, club_id: int) -> dict[str, object]:
+        club = next((club for club in self.import_report.clubs if club.id == club_id), None)
+        if club is None:
+            raise KeyError(club_id)
+        active_competition = next(
+            (competition for competition in self.plan.competitions if club_id in competition.club_ids),
+            None,
+        )
+        return {
+            "id": club.id,
+            "name": club.name,
+            "nation": club.nation_source,
+            "status": club.status.value,
+            "competition_id": None if active_competition is None else active_competition.id,
+            "current_position": None
+            if active_competition is None
+            else next(
+                index
+                for index, row in enumerate(self.standings(active_competition.id), start=1)
+                if row["club_id"] == club_id
+            ),
+        }
+
     def standings(self, competition_id: int) -> list[dict[str, object]]:
         competition = self._competition(competition_id)
         rows = [
@@ -200,6 +243,75 @@ class GameSession:
                 key=lambda player: (-player.overall, player.id),
             )
         ]
+
+    def player_detail(self, player_id: int) -> dict[str, object]:
+        player = self.plan.players.get(player_id)
+        if player is None:
+            raise KeyError(player_id)
+        state = self.player_states[player_id]
+        return {
+            "id": player.id,
+            "name": self.source_player_names[player.id],
+            "club_id": player.club_id,
+            "position": player.primary_position,
+            "secondary_positions": list(player.secondary_positions),
+            "overall": player.overall,
+            "attributes": asdict(player.attributes),
+            "fatigue": state.fatigue,
+            "form": state.form,
+            "morale": state.morale,
+            "injury": None if state.injury is None else {
+                "severity": state.injury.severity,
+                "end_date": state.injury.end_date.isoformat(),
+            },
+            "suspension_matches_remaining": state.suspension_matches_remaining,
+            "season": self.player_statistics().get(player_id, PlayerSeasonStatistics()).as_dict(),
+        }
+
+    def players(
+        self, position: str | None = None, club_id: int | None = None, minimum_overall: int | None = None
+    ) -> list[dict[str, object]]:
+        return [
+            {
+                "id": player.id,
+                "name": self.source_player_names[player.id],
+                "club_id": player.club_id,
+                "position": player.primary_position,
+                "overall": player.overall,
+            }
+            for player in sorted(self.plan.players.values(), key=lambda player: (-player.overall, player.id))
+            if (position is None or player.primary_position == position)
+            and (club_id is None or player.club_id == club_id)
+            and (minimum_overall is None or player.overall >= minimum_overall)
+        ]
+
+    def club_calendar(self, club_id: int) -> list[dict[str, object]]:
+        competition = next((item for item in self.plan.competitions if club_id in item.club_ids), None)
+        if competition is None:
+            raise KeyError(club_id)
+        return [
+            item
+            for item in self.competition_calendar(competition.id, round_number=None)
+            if item["home_club_id"] == club_id or item["away_club_id"] == club_id
+        ]
+
+    def match_detail(self, fixture_id: int) -> dict[str, object]:
+        played = next((fixture for fixture in self.played_fixtures if fixture.fixture.id == fixture_id), None)
+        if played is None:
+            raise KeyError(fixture_id)
+        return {
+            "id": played.fixture.id,
+            "competition_id": played.fixture.competition_id,
+            "round": played.fixture.round_number,
+            "date": played.fixture.date.isoformat(),
+            "home_club_id": played.fixture.home_club_id,
+            "away_club_id": played.fixture.away_club_id,
+            "home_goals": played.result.home_goals,
+            "away_goals": played.result.away_goals,
+            "home_stats": asdict(played.result.home_stats),
+            "away_stats": asdict(played.result.away_stats),
+            "events": [asdict(event) for event in played.result.events],
+        }
 
     def player_statistics(self, competition_id: int | None = None) -> dict[int, PlayerSeasonStatistics]:
         statistics: dict[int, PlayerSeasonStatistics] = {}
