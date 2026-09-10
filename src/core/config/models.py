@@ -44,6 +44,7 @@ class RegenSourcesConfig:
 @dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
 class ImportConfig:
     effectif_actif: ActiveRosterConfig
+    formation_initiale: str
     sources_regens: RegenSourcesConfig
 
 
@@ -197,6 +198,13 @@ class InitialPlayerStateConfig:
     morale: float = Field(ge=0, le=1)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class DefaultBlockHeightConfig:
+    min: float = Field(ge=-1, le=1)
+    max: float = Field(ge=-1, le=1)
+    defaut: float = Field(ge=-1, le=1)
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
@@ -207,6 +215,7 @@ class GameConfig:
     composites: dict[str, dict[str, float]]
     morale_match_amplitude: float
     initial_player_state: InitialPlayerStateConfig
+    default_block_height: DefaultBlockHeightConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

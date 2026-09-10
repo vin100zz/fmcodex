@@ -15,6 +15,7 @@
       "joueurs_max_par_club": 30,
       "tri": ["value_source_desc", "wage_source_desc", "unique_id_asc"]
     },
+    "formation_initiale": "4-3-3",
     "sources_regens": {
       "dossier": "data/regens",
       "nations": "nations.csv",

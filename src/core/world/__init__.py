@@ -3,6 +3,15 @@ from core.world.ratings import ClubRating, RatingError, derive_active_club_ratin
 from core.world.synthesis import GeneratedPlayer, build_lineup, synthesize_active_players
 from core.world.calendar import Fixture, GameDate, generate_double_round_robin
 from core.world.standings import PlayedMatch, StandingRow, calculate_standings
+from core.world.season import (
+    PlayedFixture,
+    PlayedRound,
+    ScheduledCompetition,
+    SeasonPlan,
+    competition_standings,
+    create_season_plan,
+    play_round,
+)
 
 __all__ = [
     "ClubRating",
@@ -20,4 +29,11 @@ __all__ = [
     "PlayedMatch",
     "StandingRow",
     "calculate_standings",
+    "PlayedFixture",
+    "PlayedRound",
+    "ScheduledCompetition",
+    "SeasonPlan",
+    "competition_standings",
+    "create_season_plan",
+    "play_round",
 ]

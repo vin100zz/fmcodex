@@ -11,6 +11,7 @@ from core.config.models import (
     AnalyticEngineConfig,
     AttributeBoundsConfig,
     GameConfig,
+    DefaultBlockHeightConfig,
     InitialPlayerStateConfig,
     ImplicationConfig,
     PossessionEngineConfig,
@@ -75,6 +76,7 @@ def load_config(directory: Path) -> GameConfig:
     composites = _validate_composites(documents["attributs"])
     morale_match_amplitude = _validate_morale_amplitude(documents["etats"])
     initial_player_state = _validate_initial_player_state(documents["etats"])
+    default_block_height = _validate_default_block_height(documents["formations"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -87,6 +89,7 @@ def load_config(directory: Path) -> GameConfig:
         composites=composites,
         morale_match_amplitude=morale_match_amplitude,
         initial_player_state=initial_player_state,
+        default_block_height=default_block_height,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -218,6 +221,20 @@ def _validate_initial_player_state(document: object) -> InitialPlayerStateConfig
         )
     except (KeyError, ValidationError) as error:
         raise ConfigError(f"Invalid initial player state: {error}") from error
+
+
+def _validate_default_block_height(document: object) -> DefaultBlockHeightConfig:
+    root = _mapping(document, "formations.json")
+    try:
+        source = _mapping(root["hauteur_bloc"], "formations.hauteur_bloc")
+        height = TypeAdapter(DefaultBlockHeightConfig).validate_python(
+            {key: source[key] for key in ("min", "max", "defaut")}
+        )
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid formations.json block height: {error}") from error
+    if height.min > height.max or not height.min <= height.defaut <= height.max:
+        raise ConfigError("Default block height must be within configured bounds")
+    return height
 
 
 def _attribute_names(document: object) -> set[str]:
