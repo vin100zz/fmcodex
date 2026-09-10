@@ -26,6 +26,7 @@
     "debut_mois": 8, "debut_jour": 10,
     "fin_mois": 5, "fin_jour": 25,
     "jours_entre_journees": 7,
+    "matches_par_adversaire": 2,
     "points_victoire": 3, "points_nul": 1, "points_defaite": 0,
     "criteres_departage": ["points", "difference_buts", "buts_pour", "confrontation_directe"]
   },

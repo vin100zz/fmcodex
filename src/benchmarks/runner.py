@@ -8,6 +8,7 @@ from random import Random
 
 from benchmarks.fixtures import build_fixture, load_fixture, save_fixture
 from benchmarks.match import run_match_suite
+from benchmarks.stats_match import run_stats_match_suite
 from core.config import load_config
 from core.world import derive_active_club_ratings, import_source_data
 
@@ -17,7 +18,7 @@ DEFAULT_FIXTURE = Path("benchmarks/effectifs/source_v1.json")
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run Football Manager Light calibration suites.")
-    parser.add_argument("--suite", choices=("match",), default="match")
+    parser.add_argument("--suite", choices=("match", "stats_match"), default="match")
     parser.add_argument("--iterations", type=int)
     parser.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     parser.add_argument("--create-snapshot", action="store_true")
@@ -37,11 +38,16 @@ def main() -> int:
         print(f"Snapshot created: {arguments.fixture} ({len(fixture.ratings)} clubs)")
         return 0
 
-    fixture = load_fixture(workspace / arguments.fixture)
     benchmark_config = config.raw_documents["benchmarks"]
-    default_iterations = int(benchmark_config["execution"]["iterations_defaut_match"])
+    default_key = f"iterations_defaut_{arguments.suite}"
+    default_iterations = int(benchmark_config["execution"][default_key])
     seed = int(benchmark_config["execution"]["graine_defaut"])
-    checks = run_match_suite(config, fixture, arguments.iterations or default_iterations, Random(seed))
+    iterations = arguments.iterations or default_iterations
+    if arguments.suite == "match":
+        fixture = load_fixture(workspace / arguments.fixture)
+        checks = run_match_suite(config, fixture, iterations, Random(seed))
+    else:
+        checks = run_stats_match_suite(config, iterations, Random(seed))
     for check in checks:
         state = "OK" if check.passed else "ECHEC"
         print(

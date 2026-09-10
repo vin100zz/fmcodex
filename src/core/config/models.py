@@ -54,6 +54,7 @@ class SeasonConfig:
     fin_mois: int = Field(ge=1, le=12)
     fin_jour: int = Field(ge=1, le=31)
     jours_entre_journees: int = Field(ge=1)
+    matches_par_adversaire: int = Field(ge=1)
     points_victoire: int = Field(ge=0)
     points_nul: int = Field(ge=0)
     points_defaite: int = Field(ge=0)
@@ -122,11 +123,90 @@ class AttributeBoundsConfig:
     max: int = Field(le=100)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ChronologyConfig:
+    duree_match_secondes: int = Field(gt=0)
+    duree_possession_min: int = Field(gt=0)
+    duree_possession_moyenne: float = Field(gt=0)
+    duree_possession_forme_gamma: float = Field(gt=0)
+    temps_additionnel_min: int = Field(ge=0)
+    temps_additionnel_max: int = Field(ge=0)
+    secondes_par_arret_de_jeu: int = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class TransitionConfig:
+    k_prog: float = Field(ge=0)
+    k_occ: float = Field(ge=0)
+    bonus_domicile: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class DensityConfig:
+    reference: float = Field(gt=0)
+    exposant: float = Field(gt=0)
+    note_plancher: float = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class LaneConfig:
+    beta_softmax: float = Field(ge=0)
+    probabilite_changement_aile: float = Field(ge=0, le=1)
+    poids_vision_changement_aile: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ChanceConfig:
+    xg_base_centre: float = Field(gt=0, lt=1)
+    xg_base_frappe: float = Field(gt=0, lt=1)
+    multiplicateur_contre: float = Field(gt=0)
+    sensibilite_tireur_gardien: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class TurnoverConfig:
+    zone_declenchant_contre: str
+    malus_defensif_contre: float = Field(ge=0)
+    malus_defensif_couloir_concerne: float = Field(ge=0)
+    duree_malus_possessions: int = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class PossessionEngineConfig:
+    chronologie: ChronologyConfig
+    transitions: TransitionConfig
+    densite: DensityConfig
+    couloirs: LaneConfig
+    occasion: ChanceConfig
+    turnover: TurnoverConfig
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ImplicationConfig:
+    zones: tuple[str, ...]
+    couloirs: tuple[str, ...]
+    vertical_attaque: dict[str, tuple[float, ...]]
+    vertical_defense: dict[str, tuple[float, ...]]
+    lateral: dict[str, tuple[float, ...]]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class InitialPlayerStateConfig:
+    form: float = Field(gt=0)
+    fatigue: float = Field(ge=0, le=1)
+    morale: float = Field(ge=0, le=1)
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
     analytic_engine: AnalyticEngineConfig
     attribute_bounds: AttributeBoundsConfig
+    possession_engine: PossessionEngineConfig
+    implications: ImplicationConfig
+    composites: dict[str, dict[str, float]]
+    morale_match_amplitude: float
+    initial_player_state: InitialPlayerStateConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

@@ -1,0 +1,42 @@
+[
+  {
+    "reference_id": "stats_match",
+    "metric": "possessions_par_equipe",
+    "measured": 109.261,
+    "target": 110.0,
+    "tolerance": 10.0,
+    "passed": true
+  },
+  {
+    "reference_id": "stats_match",
+    "metric": "tirs_par_equipe",
+    "measured": 12.069,
+    "target": 13.0,
+    "tolerance": 1.0,
+    "passed": true
+  },
+  {
+    "reference_id": "stats_match",
+    "metric": "xg_par_equipe",
+    "measured": 1.3750418000000002,
+    "target": 1.4,
+    "tolerance": 0.09999999999999998,
+    "passed": true
+  },
+  {
+    "reference_id": "stats_match",
+    "metric": "buts_par_equipe",
+    "measured": 1.379,
+    "target": 1.35,
+    "tolerance": 0.1,
+    "passed": true
+  },
+  {
+    "reference_id": "stats_match",
+    "metric": "possession_pct",
+    "measured": 50.001372859483254,
+    "target": 50.0,
+    "tolerance": 5.0,
+    "passed": true
+  }
+]

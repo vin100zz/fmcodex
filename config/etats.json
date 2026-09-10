@@ -1,5 +1,6 @@
 {
   "fatigue": {
+    "initiale": 1.0,
     "consommation_par_minute": 0.0042,
     "resistance_base": 0.7,
     "resistance_facteur_endurance": 0.6,

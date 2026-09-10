@@ -7,7 +7,15 @@ from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
-from core.config.models import AnalyticEngineConfig, AttributeBoundsConfig, GameConfig, WorldConfig
+from core.config.models import (
+    AnalyticEngineConfig,
+    AttributeBoundsConfig,
+    GameConfig,
+    InitialPlayerStateConfig,
+    ImplicationConfig,
+    PossessionEngineConfig,
+    WorldConfig,
+)
 
 
 class ConfigError(ValueError):
@@ -62,6 +70,11 @@ def load_config(directory: Path) -> GameConfig:
     world = _validate_world(documents["monde"])
     analytic_engine = _validate_analytic_engine(documents["moteur_match"])
     attribute_bounds = _validate_attribute_bounds(documents["attributs"])
+    possession_engine = _validate_possession_engine(documents["moteur_match"])
+    implications = _validate_implications(documents["implications"])
+    composites = _validate_composites(documents["attributs"])
+    morale_match_amplitude = _validate_morale_amplitude(documents["etats"])
+    initial_player_state = _validate_initial_player_state(documents["etats"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -69,6 +82,11 @@ def load_config(directory: Path) -> GameConfig:
         world=world,
         analytic_engine=analytic_engine,
         attribute_bounds=attribute_bounds,
+        possession_engine=possession_engine,
+        implications=implications,
+        composites=composites,
+        morale_match_amplitude=morale_match_amplitude,
+        initial_player_state=initial_player_state,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -145,6 +163,61 @@ def _validate_attribute_bounds(document: object) -> AttributeBoundsConfig:
     if bounds.min >= bounds.max:
         raise ConfigError("Attribute minimum must be lower than maximum")
     return bounds
+
+
+def _validate_possession_engine(document: object) -> PossessionEngineConfig:
+    root = _mapping(document, "moteur_match.json")
+    required = ("chronologie", "transitions", "densite", "couloirs", "occasion", "turnover")
+    try:
+        payload = {key: root[key] for key in required}
+        return TypeAdapter(PossessionEngineConfig).validate_python(payload)
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid moteur_match.json possession configuration: {error}") from error
+
+
+def _validate_implications(document: object) -> ImplicationConfig:
+    try:
+        return TypeAdapter(ImplicationConfig).validate_python(document)
+    except ValidationError as error:
+        raise ConfigError(f"Invalid implications.json: {error}") from error
+
+
+def _validate_composites(document: object) -> dict[str, dict[str, float]]:
+    root = _mapping(document, "attributs.json")
+    try:
+        composites = root["composites"]
+        if not isinstance(composites, dict):
+            raise TypeError("composites must be an object")
+        return {
+            str(name): {str(attribute): float(weight) for attribute, weight in _mapping(weights, str(name)).items()}
+            for name, weights in composites.items()
+        }
+    except (KeyError, TypeError, ValueError) as error:
+        raise ConfigError(f"Invalid attributs.json composites: {error}") from error
+
+
+def _validate_morale_amplitude(document: object) -> float:
+    root = _mapping(document, "etats.json")
+    try:
+        amplitude = _number(_mapping(root["moral"], "etats.moral")["amplitude_effet_match"], "etats.moral")
+    except KeyError as error:
+        raise ConfigError(f"Invalid etats.json moral configuration: {error}") from error
+    if not 0 <= amplitude <= 1:
+        raise ConfigError("Moral match amplitude must be between 0 and 1")
+    return amplitude
+
+
+def _validate_initial_player_state(document: object) -> InitialPlayerStateConfig:
+    root = _mapping(document, "etats.json")
+    try:
+        fatigue = _mapping(root["fatigue"], "etats.fatigue")
+        form = _mapping(root["forme"], "etats.forme")
+        moral = _mapping(root["moral"], "etats.moral")
+        return TypeAdapter(InitialPlayerStateConfig).validate_python(
+            {"fatigue": fatigue["initiale"], "form": form["initiale"], "morale": moral["initial"]}
+        )
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid initial player state: {error}") from error
 
 
 def _attribute_names(document: object) -> set[str]:

@@ -2,7 +2,8 @@
   "_note": "Coefficients du moteur par possessions. k_prog et k_occ sont les boutons de part d'aleatoire.",
   "chronologie": {
     "duree_match_secondes": 5400,
-    "duree_possession_moyenne": 22.0,
+    "duree_possession_min": 1,
+    "duree_possession_moyenne": 26.0,
     "duree_possession_forme_gamma": 2.5,
     "temps_additionnel_min": 120,
     "temps_additionnel_max": 300,
@@ -25,8 +26,8 @@
     "poids_vision_changement_aile": 0.004
   },
   "occasion": {
-    "xg_base_centre": 0.06,
-    "xg_base_frappe": 0.11,
+    "xg_base_centre": 0.066,
+    "xg_base_frappe": 0.121,
     "multiplicateur_contre": 1.6,
     "sensibilite_tireur_gardien": 0.035
   },
