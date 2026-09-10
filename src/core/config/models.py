@@ -273,6 +273,73 @@ class SuspensionStateConfig:
     remise_a_zero_fin_saison: bool
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class LineupSelectionConfig:
+    poids_composite: float = Field(ge=0)
+    poids_forme: float = Field(ge=0)
+    poids_fatigue: float = Field(ge=0)
+    seuil_rotation_fatigue: float = Field(ge=0, le=1)
+    ecart_niveau_acceptable_rotation: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class AgeValueFactorConfig:
+    age_min: int = Field(ge=0)
+    age_max: int = Field(ge=0)
+    facteur: float = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ContractValueDiscountConfig:
+    mois_max: int = Field(gt=0)
+    facteur: float = Field(gt=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class PlayerValuationConfig:
+    base_euros: int = Field(gt=0)
+    exposant: float = Field(gt=0)
+    niveau_reference: float
+    poids_potentiel_sur_niveau: float = Field(ge=0)
+    courbe_age: tuple[AgeValueFactorConfig, ...]
+    decote_fin_contrat: tuple[ContractValueDiscountConfig, ...]
+    rarete_poste: dict[str, float]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class RevenueConfig:
+    base_par_point_reputation: int = Field(gt=0)
+    bonus_classement_premier: int = Field(ge=0)
+    decroissance_par_place: float = Field(gt=0)
+    multiplicateur_pays: dict[str, float]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class ClubBudgetConfig:
+    part_revenus_transfert: float = Field(ge=0)
+    part_solde_transfert: float = Field(ge=0)
+    part_revenus_salaires: float = Field(ge=0)
+    semaines_par_an: int = Field(gt=0)
+    revenus: RevenueConfig
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class RosterGuardConfig:
+    effectif_min: int = Field(gt=0)
+    effectif_max: int = Field(gt=0)
+    gardiens_min: int = Field(gt=0)
+    gardiens_recommandes: int = Field(gt=0)
+    plafond_salarial_strict: bool
+    solde_minimal_autorise: int
+
+
+@dataclass(frozen=True, slots=True)
+class ManagementConfig:
+    valuation: PlayerValuationConfig
+    budgets: ClubBudgetConfig
+    garde_fous: RosterGuardConfig
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
@@ -287,6 +354,8 @@ class GameConfig:
     fatigue_state: FatigueStateConfig
     injury_state: InjuryStateConfig
     suspension_state: SuspensionStateConfig
+    lineup_selection: LineupSelectionConfig
+    management: ManagementConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

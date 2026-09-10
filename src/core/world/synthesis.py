@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from math import log1p
 from random import Random
-from typing import Mapping
+from typing import Iterable, Mapping
 
 from core.config.models import GameConfig
 from core.domain.entities import PlayerSeed, SimulationStatus
@@ -60,6 +60,7 @@ def build_lineup(
     formation: str,
     block_height: float,
     available_player_ids: frozenset[int] | None = None,
+    selection_conditions: Mapping[int, tuple[float, float]] | None = None,
 ) -> Lineup:
     """Select a deterministic best available eleven for one configured formation."""
     formation_positions = _formation_positions(config, formation)
@@ -73,10 +74,7 @@ def build_lineup(
     available = {player.id: player for player in candidates}
     selected: list[MatchPlayer] = []
     for position in formation_positions:
-        candidate = max(
-            available.values(),
-            key=lambda player: (_position_score(player, position), player.overall, -player.id),
-        )
+        candidate = _choose_candidate(available.values(), position, config, selection_conditions)
         del available[candidate.id]
         selected.append(
             MatchPlayer(
@@ -135,6 +133,72 @@ def _position_score(player: GeneratedPlayer, assigned_position: str) -> int:
     if assigned_position in player.secondary_positions:
         return 1
     return 0
+
+
+def _selection_score(
+    player: GeneratedPlayer,
+    assigned_position: str,
+    config: GameConfig,
+    conditions: Mapping[int, tuple[float, float]] | None,
+) -> float:
+    """Rate a player for a match while accounting for form, fatigue and position."""
+    form, fatigue = conditions.get(player.id, (1.0, 1.0)) if conditions is not None else (1.0, 1.0)
+    position_rating = _position_rating(player, assigned_position, config)
+    selection = config.lineup_selection
+    return (
+        selection.poids_composite * position_rating
+        + selection.poids_forme * 100 * form
+        + selection.poids_fatigue * 100 * fatigue
+    )
+
+
+def _choose_candidate(
+    candidates: Iterable[GeneratedPlayer],
+    assigned_position: str,
+    config: GameConfig,
+    conditions: Mapping[int, tuple[float, float]] | None,
+) -> GeneratedPlayer:
+    choices = tuple(candidates)
+    if not choices:
+        raise ValueError("Lineup candidates must be generated players")
+    position_ratings = {
+        player.id: _position_rating(player, assigned_position, config) for player in choices
+    }
+    best_quality = max(
+        choices,
+        key=lambda player: (position_ratings[player.id], _position_score(player, assigned_position), player.overall, -player.id),
+    )
+    fatigue = conditions.get(best_quality.id, (1.0, 1.0))[1] if conditions is not None else 1.0
+    eligible = choices
+    if fatigue < config.lineup_selection.seuil_rotation_fatigue:
+        minimum_rating = position_ratings[best_quality.id] - config.lineup_selection.ecart_niveau_acceptable_rotation
+        eligible = tuple(player for player in choices if position_ratings[player.id] >= minimum_rating)
+    return max(
+        eligible,
+        key=lambda player: (
+            _selection_score(player, assigned_position, config, conditions),
+            position_ratings[player.id],
+            player.overall,
+            -player.id,
+        ),
+    )
+
+
+def _position_rating(player: GeneratedPlayer, assigned_position: str, config: GameConfig) -> float:
+    attributes_document = _mapping(config.raw_documents["attributs"], "attributs.json")
+    ratings = _mapping(attributes_document["note_globale"], "attributs.note_globale")
+    weights = _mapping(ratings[assigned_position], f"attributs.note_globale.{assigned_position}")
+    raw_rating = sum(
+        _number(weight, f"attributs.note_globale.{assigned_position}")
+        * getattr(player.attributes, attribute)
+        for attribute, weight in weights.items()
+    )
+    affinity = 1.0 if player.primary_position == assigned_position else 0.5 if assigned_position in player.secondary_positions else 0.0
+    penalty = _mapping(attributes_document["malus_hors_poste"], "attributs.malus_hors_poste")
+    return raw_rating * (
+        _number(penalty["base"], "attributs.malus_hors_poste.base")
+        + _number(penalty["facteur"], "attributs.malus_hors_poste.facteur") * affinity
+    )
 
 
 def _clamp_attribute(value: float, config: GameConfig) -> int:

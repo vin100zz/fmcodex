@@ -15,6 +15,8 @@ from core.config.models import (
     FatigueStateConfig,
     InitialPlayerStateConfig,
     InjuryStateConfig,
+    LineupSelectionConfig,
+    ManagementConfig,
     SuspensionStateConfig,
     ImplicationConfig,
     PossessionEngineConfig,
@@ -83,6 +85,8 @@ def load_config(directory: Path) -> GameConfig:
     fatigue_state = _validate_fatigue_state(documents["etats"])
     injury_state = _validate_injury_state(documents["etats"], fatigue_state)
     suspension_state = _validate_suspension_state(documents["etats"])
+    lineup_selection = _validate_lineup_selection(documents["ia_gestion"])
+    management = _validate_management(documents["ia_gestion"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
@@ -99,6 +103,8 @@ def load_config(directory: Path) -> GameConfig:
         fatigue_state=fatigue_state,
         injury_state=injury_state,
         suspension_state=suspension_state,
+        lineup_selection=lineup_selection,
+        management=management,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -290,6 +296,32 @@ def _validate_suspension_state(document: object) -> SuspensionStateConfig:
     if state.matches_rouge_min > state.matches_rouge_max:
         raise ConfigError("Red-card suspension bounds are invalid")
     return state
+
+
+def _validate_lineup_selection(document: object) -> LineupSelectionConfig:
+    root = _mapping(document, "ia_gestion.json")
+    try:
+        return TypeAdapter(LineupSelectionConfig).validate_python(root["selection"])
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid ia_gestion.json lineup selection configuration: {error}") from error
+
+
+def _validate_management(document: object) -> ManagementConfig:
+    root = _mapping(document, "ia_gestion.json")
+    try:
+        payload = {
+            "valuation": root["valorisation"],
+            "budgets": root["budgets"],
+            "garde_fous": root["garde_fous"],
+        }
+        management = TypeAdapter(ManagementConfig).validate_python(payload)
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid ia_gestion.json management configuration: {error}") from error
+    if management.garde_fous.effectif_min > management.garde_fous.effectif_max:
+        raise ConfigError("Management roster minimum cannot exceed maximum")
+    if management.garde_fous.gardiens_min > management.garde_fous.gardiens_recommandes:
+        raise ConfigError("Management goalkeeper minimum cannot exceed recommended count")
+    return management
 
 
 def _attribute_names(document: object) -> set[str]:

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from random import Random
 
 from core.config.models import GameConfig
+from core.ai import choose_lineup
 from core.engine import Lineup, PossessionMatchEngine, PossessionMatchResult
 from core.world.calendar import Fixture, GameDate, generate_double_round_robin
 from core.world.importer import ImportReport
@@ -13,7 +14,6 @@ from core.world.synthesis import GeneratedPlayer, build_lineup
 from core.world.player_state import (
     PlayerState,
     PlayerStateEvent,
-    apply_player_conditions,
     apply_player_state_events,
     disciplinary_events,
     fatigue_events_for_lineup,
@@ -247,17 +247,12 @@ def _available_lineup(
     date: GameDate,
     config: GameConfig,
 ) -> Lineup:
-    available = frozenset(
-        player_id
-        for player_id, player in plan.players.items()
-        if player.club_id == club_id and states[player_id].is_available(date)
-    )
-    lineup = build_lineup(
+    return choose_lineup(
         club_id=club_id,
         players=plan.players,
+        states=states,
+        date=date,
         config=config,
         formation=config.world.importation.formation_initiale,
         block_height=config.default_block_height.defaut,
-        available_player_ids=available,
     )
-    return apply_player_conditions(lineup, states, date)
