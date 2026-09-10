@@ -333,11 +333,28 @@ class RosterGuardConfig:
     solde_minimal_autorise: int
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class PositionDepthTargetConfig:
+    starters: int = Field(ge=0)
+    rotations: int = Field(ge=0)
+    backups: int = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class RosterTargetConfig:
+    niveau_base: float
+    poids_reputation: float = Field(ge=0)
+    decote_rotation: float = Field(ge=0)
+    decote_doublure: float = Field(ge=0)
+    effectif_par_poste: dict[str, PositionDepthTargetConfig]
+
+
 @dataclass(frozen=True, slots=True)
 class ManagementConfig:
     valuation: PlayerValuationConfig
     budgets: ClubBudgetConfig
     garde_fous: RosterGuardConfig
+    roster_target: RosterTargetConfig
 
 
 @dataclass(frozen=True, slots=True)

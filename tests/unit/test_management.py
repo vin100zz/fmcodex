@@ -4,6 +4,8 @@ import unittest
 from core.ai import (
     ClubFinancialProfile,
     PlayerEconomicProfile,
+    RosterMember,
+    assess_roster,
     can_register_signing,
     derive_club_budget,
     estimate_market_value,
@@ -52,3 +54,19 @@ class ManagementTests(unittest.TestCase):
         self.assertTrue(can_register_signing(club, budget, 1_000_000, 10_000, self.config))
         self.assertFalse(can_register_signing(club, budget, budget.transfer_budget + 1, 10_000, self.config))
         self.assertFalse(can_register_signing(club, budget, 1_000_000, budget.weekly_wage_cap, self.config))
+
+    def test_roster_assessment_reports_gaps_and_surplus(self) -> None:
+        players = (
+            RosterMember(player_id=1, position="GB", overall=85),
+            RosterMember(player_id=2, position="GB", overall=75),
+            RosterMember(player_id=3, position="GB", overall=65),
+            RosterMember(player_id=4, position="GB", overall=60),
+            RosterMember(player_id=5, position="BU", overall=70),
+        )
+
+        assessment = assess_roster(players, reputation=70, config=self.config)
+
+        self.assertEqual(assessment.target_level, 75.6)
+        self.assertIn(4, assessment.surplus_player_ids)
+        self.assertTrue(any(need.position == "DC" and need.current_player_id is None for need in assessment.needs))
+        self.assertTrue(any(need.position == "BU" and need.current_player_id == 5 for need in assessment.needs))

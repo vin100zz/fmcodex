@@ -31,6 +31,29 @@ class ClubBudget:
     weekly_wage_cap: int
 
 
+@dataclass(frozen=True, slots=True)
+class RosterMember:
+    player_id: int
+    position: str
+    overall: float
+
+
+@dataclass(frozen=True, slots=True)
+class RosterNeed:
+    position: str
+    depth: str
+    target_level: float
+    current_player_id: int | None
+    current_level: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class RosterAssessment:
+    target_level: float
+    needs: tuple[RosterNeed, ...]
+    surplus_player_ids: tuple[int, ...]
+
+
 def estimate_market_value(player: PlayerEconomicProfile, config: GameConfig) -> int:
     """Estimate a transferable player's value from the configured market model."""
     valuation = config.management.valuation
@@ -83,6 +106,48 @@ def can_register_signing(
     if safeguards.plafond_salarial_strict and club.weekly_wage_bill + weekly_wage > budget.weekly_wage_cap:
         return False
     return club.balance - transfer_fee >= safeguards.solde_minimal_autorise
+
+
+def assess_roster(
+    players: tuple[RosterMember, ...], reputation: float, config: GameConfig
+) -> RosterAssessment:
+    """Compare an actual roster with its configured positional depth targets."""
+    target = config.management.roster_target
+    target_level = target.niveau_base + target.poids_reputation * reputation
+    by_position = {
+        position: tuple(sorted((player for player in players if player.position == position), key=lambda player: (-player.overall, player.player_id)))
+        for position in target.effectif_par_poste
+    }
+    needs: list[RosterNeed] = []
+    surplus: list[int] = []
+    for position, depth_target in target.effectif_par_poste.items():
+        requirements = (
+            *(("starter", target_level) for _ in range(depth_target.starters)),
+            *(("rotation", target_level - target.decote_rotation) for _ in range(depth_target.rotations)),
+            *(("backup", target_level - target.decote_doublure) for _ in range(depth_target.backups)),
+        )
+        actual = by_position[position]
+        for index, (depth, required_level) in enumerate(requirements):
+            current = actual[index] if index < len(actual) else None
+            if current is None or current.overall < required_level:
+                needs.append(
+                    RosterNeed(
+                        position=position,
+                        depth=depth,
+                        target_level=required_level,
+                        current_player_id=None if current is None else current.player_id,
+                        current_level=None if current is None else current.overall,
+                    )
+                )
+        surplus.extend(player.player_id for player in actual[len(requirements) :])
+    unknown_positions = {player.position for player in players} - set(target.effectif_par_poste)
+    if unknown_positions:
+        raise ValueError(f"Unknown roster positions: {', '.join(sorted(unknown_positions))}")
+    return RosterAssessment(
+        target_level=target_level,
+        needs=tuple(sorted(needs, key=lambda need: (need.current_level is not None, need.current_level or -1, need.position))),
+        surplus_player_ids=tuple(sorted(surplus)),
+    )
 
 
 def _age_factor(age: int, config: GameConfig) -> float:

@@ -313,6 +313,7 @@ def _validate_management(document: object) -> ManagementConfig:
             "valuation": root["valorisation"],
             "budgets": root["budgets"],
             "garde_fous": root["garde_fous"],
+            "roster_target": _roster_target_payload(root["profil_cible"]),
         }
         management = TypeAdapter(ManagementConfig).validate_python(payload)
     except (KeyError, ValidationError) as error:
@@ -322,6 +323,28 @@ def _validate_management(document: object) -> ManagementConfig:
     if management.garde_fous.gardiens_min > management.garde_fous.gardiens_recommandes:
         raise ConfigError("Management goalkeeper minimum cannot exceed recommended count")
     return management
+
+
+def _roster_target_payload(value: object) -> dict[str, object]:
+    source = _mapping(value, "ia_gestion.profil_cible")
+    try:
+        depth = _mapping(source["effectif_par_poste"], "ia_gestion.profil_cible.effectif_par_poste")
+        return {
+            "niveau_base": source["niveau_base"],
+            "poids_reputation": source["poids_reputation"],
+            "decote_rotation": source["decote_rotation"],
+            "decote_doublure": source["decote_doublure"],
+            "effectif_par_poste": {
+                position: {
+                    "starters": _mapping(specification, position)["titulaires"],
+                    "rotations": _mapping(specification, position)["rotations"],
+                    "backups": _mapping(specification, position)["doublures"],
+                }
+                for position, specification in depth.items()
+            },
+        }
+    except KeyError as error:
+        raise ConfigError(f"Invalid ia_gestion.json roster target configuration: {error}") from error
 
 
 def _attribute_names(document: object) -> set[str]:
