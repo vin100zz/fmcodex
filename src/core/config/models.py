@@ -116,10 +116,17 @@ class AnalyticEngineConfig:
     buts_attendus_min: float = Field(gt=0)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class AttributeBoundsConfig:
+    min: int = Field(ge=1)
+    max: int = Field(le=100)
+
+
 @dataclass(frozen=True, slots=True)
 class GameConfig:
     world: WorldConfig
     analytic_engine: AnalyticEngineConfig
+    attribute_bounds: AttributeBoundsConfig
     attribute_names: frozenset[str]
     positions: frozenset[str]
     config_directory: Path

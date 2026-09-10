@@ -1,0 +1,122 @@
+[
+  {
+    "reference_id": "psg_dom_toulouse",
+    "metric": "victoire",
+    "measured": 0.9486,
+    "target": 0.75,
+    "tolerance": 0.05,
+    "passed": false
+  },
+  {
+    "reference_id": "psg_dom_toulouse",
+    "metric": "nul",
+    "measured": 0.049,
+    "target": 0.2,
+    "tolerance": 0.04,
+    "passed": false
+  },
+  {
+    "reference_id": "psg_dom_toulouse",
+    "metric": "defaite",
+    "measured": 0.0024,
+    "target": 0.05,
+    "tolerance": 0.03,
+    "passed": false
+  },
+  {
+    "reference_id": "psg_ext_toulouse",
+    "metric": "victoire",
+    "measured": 0.0025,
+    "target": 0.14,
+    "tolerance": 0.04,
+    "passed": false
+  },
+  {
+    "reference_id": "psg_ext_toulouse",
+    "metric": "nul",
+    "measured": 0.0698,
+    "target": 0.24,
+    "tolerance": 0.04,
+    "passed": false
+  },
+  {
+    "reference_id": "psg_ext_toulouse",
+    "metric": "defaite",
+    "measured": 0.9277,
+    "target": 0.62,
+    "tolerance": 0.05,
+    "passed": false
+  },
+  {
+    "reference_id": "mancity_dom_burnley",
+    "metric": "victoire",
+    "measured": 0.7545,
+    "target": 0.78,
+    "tolerance": 0.05,
+    "passed": true
+  },
+  {
+    "reference_id": "mancity_dom_burnley",
+    "metric": "nul",
+    "measured": 0.1687,
+    "target": 0.16,
+    "tolerance": 0.04,
+    "passed": true
+  },
+  {
+    "reference_id": "mancity_dom_burnley",
+    "metric": "defaite",
+    "measured": 0.0768,
+    "target": 0.06,
+    "tolerance": 0.03,
+    "passed": true
+  },
+  {
+    "reference_id": "clasico_dom",
+    "metric": "victoire",
+    "measured": 0.4653,
+    "target": 0.44,
+    "tolerance": 0.05,
+    "passed": true
+  },
+  {
+    "reference_id": "clasico_dom",
+    "metric": "nul",
+    "measured": 0.2546,
+    "target": 0.27,
+    "tolerance": 0.04,
+    "passed": true
+  },
+  {
+    "reference_id": "clasico_dom",
+    "metric": "defaite",
+    "measured": 0.2801,
+    "target": 0.29,
+    "tolerance": 0.05,
+    "passed": true
+  },
+  {
+    "reference_id": "egaux_dom",
+    "metric": "victoire",
+    "measured": 0.4389,
+    "target": 0.45,
+    "tolerance": 0.04,
+    "passed": true
+  },
+  {
+    "reference_id": "egaux_dom",
+    "metric": "nul",
+    "measured": 0.2534,
+    "target": 0.27,
+    "tolerance": 0.04,
+    "passed": true
+  },
+  {
+    "reference_id": "egaux_dom",
+    "metric": "defaite",
+    "measured": 0.3077,
+    "target": 0.28,
+    "tolerance": 0.04,
+    "passed": true
+  }
+]

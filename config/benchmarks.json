@@ -17,7 +17,7 @@
      "victoire": 0.78, "nul": 0.16, "defaite": 0.06, "tolerance": [0.05, 0.04, 0.03]},
     {"id": "clasico_dom", "domicile_club_id": 1736, "exterieur_club_id": 1708,
      "victoire": 0.44, "nul": 0.27, "defaite": 0.29, "tolerance": [0.05, 0.04, 0.05]},
-    {"id": "egaux_dom", "domicile_synthetique": "__NIVEAU_70__", "exterieur_synthetique": "__NIVEAU_70__",
+    {"id": "egaux_dom", "domicile_synthetique": {"club_id": -1, "rating": 70}, "exterieur_synthetique": {"club_id": -2, "rating": 70},
      "victoire": 0.45, "nul": 0.27, "defaite": 0.28, "tolerance": [0.04, 0.04, 0.04]}
   ],
   "distribution_scores": {

@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
-from core.config.models import AnalyticEngineConfig, GameConfig, WorldConfig
+from core.config.models import AnalyticEngineConfig, AttributeBoundsConfig, GameConfig, WorldConfig
 
 
 class ConfigError(ValueError):
@@ -61,12 +61,14 @@ def load_config(directory: Path) -> GameConfig:
     documents = _load_documents(directory)
     world = _validate_world(documents["monde"])
     analytic_engine = _validate_analytic_engine(documents["moteur_match"])
+    attribute_bounds = _validate_attribute_bounds(documents["attributs"])
     attribute_names = _attribute_names(documents["attributs"])
     positions = _positions(documents["formations"])
     _validate_coherence(documents, world, attribute_names, positions)
     return GameConfig(
         world=world,
         analytic_engine=analytic_engine,
+        attribute_bounds=attribute_bounds,
         attribute_names=frozenset(attribute_names),
         positions=frozenset(positions),
         config_directory=directory,
@@ -132,6 +134,17 @@ def _validate_analytic_engine(document: object) -> AnalyticEngineConfig:
         return TypeAdapter(AnalyticEngineConfig).validate_python(root["analytique"])
     except (KeyError, ValidationError) as error:
         raise ConfigError(f"Invalid moteur_match.json analytic configuration: {error}") from error
+
+
+def _validate_attribute_bounds(document: object) -> AttributeBoundsConfig:
+    root = _mapping(document, "attributs.json")
+    try:
+        bounds = TypeAdapter(AttributeBoundsConfig).validate_python(root["bornes"])
+    except (KeyError, ValidationError) as error:
+        raise ConfigError(f"Invalid attributs.json bounds: {error}") from error
+    if bounds.min >= bounds.max:
+        raise ConfigError("Attribute minimum must be lower than maximum")
+    return bounds
 
 
 def _attribute_names(document: object) -> set[str]:
