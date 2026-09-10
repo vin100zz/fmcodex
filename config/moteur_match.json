@@ -1,0 +1,64 @@
+{
+  "_note": "Coefficients du moteur par possessions. k_prog et k_occ sont les boutons de part d'aleatoire.",
+  "chronologie": {
+    "duree_match_secondes": 5400,
+    "duree_possession_moyenne": 22.0,
+    "duree_possession_forme_gamma": 2.5,
+    "temps_additionnel_min": 120,
+    "temps_additionnel_max": 300,
+    "secondes_par_arret_de_jeu": 25
+  },
+  "transitions": {
+    "k_prog": 0.055,
+    "k_occ": 0.048,
+    "bonus_domicile": 0.13
+  },
+  "densite": {
+    "_note": "facteur = (densite / reference) ** exposant. Levier principal d'equilibrage des formations.",
+    "reference": 3.5,
+    "exposant": 0.5,
+    "note_plancher": 25.0
+  },
+  "couloirs": {
+    "beta_softmax": 0.06,
+    "probabilite_changement_aile": 0.18,
+    "poids_vision_changement_aile": 0.004
+  },
+  "occasion": {
+    "xg_base_centre": 0.06,
+    "xg_base_frappe": 0.11,
+    "multiplicateur_contre": 1.6,
+    "sensibilite_tireur_gardien": 0.035
+  },
+  "coups_arretes": {
+    "probabilite_corner_sur_turnover_avance": 0.16,
+    "probabilite_coup_franc_sur_turnover": 0.09,
+    "xg_base_corner": 0.04,
+    "xg_base_coup_franc_direct": 0.06,
+    "part_cible_buts_sur_cpa": 0.27
+  },
+  "turnover": {
+    "zone_declenchant_contre": "MILIEU_HAUT",
+    "malus_defensif_contre": 8.0,
+    "malus_defensif_couloir_concerne": 14.0,
+    "duree_malus_possessions": 1
+  },
+  "cartons": {
+    "probabilite_jaune_par_turnover_defensif": 0.011,
+    "probabilite_rouge_direct_par_turnover_defensif": 0.0004,
+    "poids_zone_defense": 1.4,
+    "poids_agressivite_tacle": 0.006
+  },
+  "recalcul_notes": {
+    "_note": "Les agregats de zone ne sont recalcules qu'a ces evenements",
+    "palier_fatigue_minutes": 5,
+    "sur_remplacement": true,
+    "sur_carton_rouge": true
+  },
+  "analytique": {
+    "_note": "Moteur Poisson de reference",
+    "buts_attendus_base": 1.35,
+    "sensibilite_ecart_force": 0.028,
+    "bonus_domicile_buts": 0.30
+  }
+}

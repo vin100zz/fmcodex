@@ -1,0 +1,18 @@
+{
+  "_note": "Une formation est une liste de postes. Aucun code specifique par formation.",
+  "formations": {
+    "4-4-2":   ["GB","DL","DC","DC","DR","AILG","MC","MC","AILD","BU","BU"],
+    "4-3-3":   ["GB","DL","DC","DC","DR","MDC","MC","MC","AILG","BU","AILD"],
+    "4-2-3-1": ["GB","DL","DC","DC","DR","MDC","MDC","AILG","MOC","AILD","BU"],
+    "3-5-2":   ["GB","DC","DC","DC","AILG","MC","MDC","MC","AILD","BU","BU"],
+    "5-3-2":   ["GB","DL","DC","DC","DC","DR","MDC","MC","MC","BU","BU"],
+    "5-4-1":   ["GB","DL","DC","DC","DC","DR","AILG","MC","MC","AILD","BU"]
+  },
+  "hauteur_bloc": {
+    "min": -1.0, "max": 1.0, "defaut": 0.0,
+    "bonus_zone_recuperation": 1.5,
+    "malus_vulnerabilite_contre": 0.35,
+    "ajustement_menes_fin_match": 0.5,
+    "malus_inferiorite_numerique": -0.5
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "_note": "Cibles de calibrage. Une suite est verte si toutes ses cibles sont dans la tolerance.",
+  "execution": {
+    "iterations_defaut_match": 10000,
+    "iterations_defaut_saison": 1000,
+    "saisons_demographie": 30,
+    "saisons_economie": 25,
+    "graine_defaut": 20260910,
+    "parallelisme": "auto"
+  },
+  "affrontements_reference": [
+    {"id": "psg_dom_toulouse", "domicile_club_id": 868, "exterieur_club_id": 886,
+     "victoire": 0.75, "nul": 0.20, "defaite": 0.05, "tolerance": [0.05, 0.04, 0.03]},
+    {"id": "psg_ext_toulouse", "domicile_club_id": 886, "exterieur_club_id": 868,
+     "victoire": 0.14, "nul": 0.24, "defaite": 0.62, "tolerance": [0.04, 0.04, 0.05]},
+    {"id": "mancity_dom_burnley", "domicile_club_id": 679, "exterieur_club_id": 622,
+     "victoire": 0.78, "nul": 0.16, "defaite": 0.06, "tolerance": [0.05, 0.04, 0.03]},
+    {"id": "clasico_dom", "domicile_club_id": 1736, "exterieur_club_id": 1708,
+     "victoire": 0.44, "nul": 0.27, "defaite": 0.29, "tolerance": [0.05, 0.04, 0.05]},
+    {"id": "egaux_dom", "domicile_synthetique": "__NIVEAU_70__", "exterieur_synthetique": "__NIVEAU_70__",
+     "victoire": 0.45, "nul": 0.27, "defaite": 0.28, "tolerance": [0.04, 0.04, 0.04]}
+  ],
+  "distribution_scores": {
+    "score_le_plus_frequent": ["1-0", "2-1"],
+    "part_matches_zero_but": {"min": 0.07, "max": 0.09},
+    "part_matches_quatre_buts_ou_plus": {"min": 0.22, "max": 0.28},
+    "ecart_buts_moyen": {"min": 1.3, "max": 1.6}
+  },
+  "stats_match": {
+    "possessions_par_equipe": {"min": 100, "max": 120},
+    "tirs_par_equipe": {"min": 12.0, "max": 14.0},
+    "xg_par_equipe": {"min": 1.30, "max": 1.50},
+    "buts_par_equipe": {"cible": 1.35, "tolerance": 0.10},
+    "possession_pct": {"min": 45, "max": 55},
+    "avantage_domicile_buts": {"cible": 0.30, "tolerance": 0.08},
+    "part_buts_coups_arretes": {"min": 0.25, "max": 0.30},
+    "jaunes_par_equipe": {"min": 1.75, "max": 2.25},
+    "rouges_par_equipe": {"min": 0.05, "max": 0.08},
+    "repartition_couloirs": {"cible": 0.333, "tolerance": 0.05},
+    "xg_axe_superieur_aile": true
+  },
+  "saison": {
+    "points_champion": {"min": 80, "max": 90},
+    "points_dernier": {"min": 25, "max": 35},
+    "ecart_type_points": {"min": 12, "max": 16},
+    "buts_meilleur_buteur": {"min": 22, "max": 30},
+    "titres_club_le_plus_fort_sur_100": {"min": 0.55, "max": 0.80},
+    "correlation_reputation_classement": {"min": 0.70, "max": 0.85}
+  },
+  "formations": {
+    "taux_victoire_max_contre_le_champ": 0.55,
+    "taux_victoire_min_contre_le_champ": 0.45,
+    "levier_correction": "moteur.densite.exposant"
+  },
+  "oracle": {
+    "ecart_max_taux": 0.04
+  },
+  "demographie": {
+    "derive_effectif_total": 0.05,
+    "derive_parts_postes": 0.02,
+    "derive_parts_nations": 0.03,
+    "derive_joueurs_au_dessus_85": 0.20,
+    "age_moyen_effectifs": {"min": 25.0, "max": 27.0}
+  },
+  "economie": {
+    "part_max_joueurs_80_dans_top3": 0.25,
+    "transferts_par_club_fenetre_ete": {"min": 3, "max": 7},
+    "champions_differents_par_pays_sur_25": {"min": 4},
+    "clubs_solde_negatif_permanent": {"max": 0},
+    "part_transferts_depuis_dormants": {"min": 0.25, "max": 0.40},
+    "derive_masse_salariale_annuelle_max": 0.12
+  },
+  "performance": {
+    "ms_par_match_possession": 20,
+    "secondes_par_saison_complete": 40,
+    "secondes_100_saisons_analytique": 60,
+    "secondes_chargement_donnees": 10,
+    "secondes_sauvegarde": 2
+  },
+  "ordre_calibrage": ["stats_match", "formations", "match", "saison", "demographie", "economie"]
+}

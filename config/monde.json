@@ -1,0 +1,48 @@
+{
+  "version_config": 2,
+  "date_depart": {"annee": 2026, "mois": 8, "jour": 10},
+  "_note": "Perimetre simule et calendrier. Les clubs hors de ce perimetre sont dormants. division_id identifie la premiere division dans les donnees fournies (data/clubs.csv, colonne 'Division ID') ; le nom de la ligue n'y est pas fiable pour le filtrage.",
+  "competitions_simulees": [
+    {"pays": "FRA", "nom": "Ligue 1", "niveau": 1, "nb_clubs": 18, "division_id": 16},
+    {"pays": "ESP", "nom": "La Liga", "niveau": 1, "nb_clubs": 20, "division_id": 67},
+    {"pays": "ITA", "nom": "Serie A", "niveau": 1, "nb_clubs": 20, "division_id": 32},
+    {"pays": "ENG", "nom": "Premier League", "niveau": 1, "nb_clubs": 20, "division_id": 11},
+    {"pays": "GER", "nom": "Bundesliga", "niveau": 1, "nb_clubs": 18, "division_id": 22}
+  ],
+  "importation": {
+    "_note": "Les joueurs hors des 30 premiers d'un club actif restent charges mais sont simules en regime allege.",
+    "effectif_actif": {
+      "joueurs_max_par_club": 30,
+      "tri": ["value_source_desc", "wage_source_desc", "unique_id_asc"]
+    },
+    "sources_regens": {
+      "dossier": "data/regens",
+      "nations": "nations.csv",
+      "prenoms_pattern": "prenoms_{code_iso3}.csv",
+      "noms_pattern": "noms_{code_iso3}.csv"
+    }
+  },
+  "saison": {
+    "debut_mois": 8, "debut_jour": 10,
+    "fin_mois": 5, "fin_jour": 25,
+    "jours_entre_journees": 7,
+    "points_victoire": 3, "points_nul": 1, "points_defaite": 0,
+    "criteres_departage": ["points", "difference_buts", "buts_pour", "confrontation_directe"]
+  },
+  "mercato": {
+    "ete": {"debut_mois": 6, "debut_jour": 10, "fin_mois": 8, "fin_jour": 31},
+    "hiver": {"debut_mois": 1, "debut_jour": 1, "fin_mois": 1, "fin_jour": 31},
+    "tours_par_jour": 1
+  },
+  "dates_cles": {
+    "promotion_centre_formation": {"mois": 6, "jour": 15},
+    "liberation_contrats_expires": {"mois": 6, "jour": 30},
+    "bilan_demographique": {"mois": 7, "jour": 1}
+  },
+  "regles_match": {
+    "joueurs_sur_terrain": 11,
+    "remplacements_max": 5,
+    "fenetres_remplacement": 3,
+    "taille_banc": 9
+  }
+}

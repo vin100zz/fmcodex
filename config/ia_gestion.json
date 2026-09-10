@@ -1,0 +1,122 @@
+{
+  "valorisation": {
+    "_note": "Convexite en talent indispensable : un joueur a 90 vaut ~5x un joueur a 75.",
+    "base_euros": 1000000,
+    "exposant": 0.115,
+    "niveau_reference": 55,
+    "poids_potentiel_sur_niveau": 0.75,
+    "courbe_age": [
+      {"age_min": 16, "age_max": 20, "facteur": 1.45},
+      {"age_min": 21, "age_max": 23, "facteur": 1.35},
+      {"age_min": 24, "age_max": 26, "facteur": 1.15},
+      {"age_min": 27, "age_max": 29, "facteur": 1.00},
+      {"age_min": 30, "age_max": 31, "facteur": 0.70},
+      {"age_min": 32, "age_max": 33, "facteur": 0.42},
+      {"age_min": 34, "age_max": 45, "facteur": 0.18}
+    ],
+    "decote_fin_contrat": [
+      {"mois_max": 6,  "facteur": 0.15},
+      {"mois_max": 12, "facteur": 0.45},
+      {"mois_max": 18, "facteur": 0.75}
+    ],
+    "rarete_poste": {"GB": 1.00, "DC": 1.00, "DL": 1.05, "DR": 1.05, "MDC": 1.00,
+                     "MC": 1.00, "MOC": 1.10, "AILG": 1.10, "AILD": 1.10, "BU": 1.20}
+  },
+  "utilite": {
+    "poids_preference_jeunes": 0.35,
+    "poids_appetit_risque": 0.30,
+    "age_seuil_jeunesse": 24
+  },
+  "profil_cible": {
+    "niveau_base": 42.0,
+    "poids_reputation": 0.48,
+    "decote_rotation": 6.0,
+    "decote_doublure": 14.0,
+    "effectif_par_poste": {
+      "GB": {"titulaires": 1, "rotations": 1, "doublures": 1},
+      "DC": {"titulaires": 2, "rotations": 1, "doublures": 1},
+      "DL": {"titulaires": 1, "rotations": 1, "doublures": 0},
+      "DR": {"titulaires": 1, "rotations": 1, "doublures": 0},
+      "MDC": {"titulaires": 1, "rotations": 1, "doublures": 1},
+      "MC": {"titulaires": 2, "rotations": 1, "doublures": 1},
+      "MOC": {"titulaires": 1, "rotations": 1, "doublures": 0},
+      "AILG": {"titulaires": 1, "rotations": 1, "doublures": 0},
+      "AILD": {"titulaires": 1, "rotations": 1, "doublures": 0},
+      "BU": {"titulaires": 1, "rotations": 1, "doublures": 1}
+    }
+  },
+  "budgets": {
+    "part_revenus_transfert": 0.30,
+    "part_solde_transfert": 0.40,
+    "part_revenus_salaires": 0.62,
+    "semaines_par_an": 52,
+    "revenus": {
+      "base_par_point_reputation": 850000,
+      "bonus_classement_premier": 45000000,
+      "decroissance_par_place": 0.88,
+      "multiplicateur_pays": {"ENG": 1.55, "ESP": 1.10, "GER": 1.05, "ITA": 1.00, "FRA": 0.75}
+    }
+  },
+  "mercato": {
+    "negociations_actives_max": 3,
+    "taille_shortlist": 12,
+    "seuil_vendeur_multiplicateur": 1.35,
+    "seuil_vendeur_reduction_surplus": 0.25,
+    "poids_patience_negociation": 0.40,
+    "ratio_contre_offre": 0.75,
+    "score_joueur": {
+      "poids_salaire": 0.38,
+      "poids_temps_de_jeu": 0.30,
+      "poids_reputation_club": 0.22,
+      "poids_ambition": 0.10,
+      "bruit_ecart_type": 0.05
+    },
+    "clubs_dormants": {
+      "_note": "Les ~25900 clubs non simules forment le marche exterieur.",
+      "probabilite_acceptation_offre_au_prix": 0.80,
+      "multiplicateur_prix_demande": 1.15,
+      "probabilite_demarchage_par_fenetre": 0.12,
+      "part_cible_transferts_entrants": 0.32
+    }
+  },
+  "contrats": {
+    "evaluation": "hebdomadaire",
+    "seuil_satisfaction_negociation": 0.65,
+    "mois_avant_fin_declenchant": 12,
+    "poids_salaire": 0.40,
+    "poids_temps_de_jeu": 0.40,
+    "poids_club": 0.20,
+    "facteur_ego": 0.15,
+    "duree_proposee_par_age": [
+      {"age_max": 23, "annees": 5},
+      {"age_max": 28, "annees": 4},
+      {"age_max": 31, "annees": 3},
+      {"age_max": 34, "annees": 2},
+      {"age_max": 45, "annees": 1}
+    ]
+  },
+  "garde_fous": {
+    "_note": "C'est ici que les simulations amateurs meurent, vers la saison 10.",
+    "effectif_min": 18,
+    "effectif_max": 30,
+    "gardiens_min": 2,
+    "gardiens_recommandes": 3,
+    "plafond_salarial_strict": true,
+    "solde_minimal_autorise": -5000000
+  },
+  "personnalite_club": {
+    "_note": "Tiree une fois a la creation du monde, stable. Cree la diversite sans code par club.",
+    "appetit_risque": {"min": 0.1, "max": 0.9},
+    "preference_jeunes": {"min": 0.1, "max": 0.9},
+    "agressivite_salariale": {"min": 0.2, "max": 0.9},
+    "patience_negociation": {"min": 0.1, "max": 0.9},
+    "correlation_reputation_agressivite": 0.35
+  },
+  "selection": {
+    "poids_composite": 1.0,
+    "poids_forme": 1.0,
+    "poids_fatigue": 1.0,
+    "seuil_rotation_fatigue": 0.65,
+    "ecart_niveau_acceptable_rotation": 6.0
+  }
+}

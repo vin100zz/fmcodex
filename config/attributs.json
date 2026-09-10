@@ -1,0 +1,55 @@
+{
+  "_note": "13 attributs. Pour en ajouter un, il faut pouvoir nommer la transition qu'il modifie.",
+  "liste": {
+    "techniques": ["passe", "technique", "finition", "tacle", "jeu_tete"],
+    "mentaux": ["vision", "placement", "sang_froid"],
+    "physiques": ["vitesse", "endurance"],
+    "gardien": ["reflexes", "sorties", "relance"]
+  },
+  "bornes": {"min": 1, "max": 100},
+  "composites": {
+    "_note": "La somme des poids de chaque composite doit valoir 1.0",
+    "progression_attaque": {"passe": 0.45, "technique": 0.30, "vision": 0.15, "vitesse": 0.10},
+    "progression_defense": {"placement": 0.45, "tacle": 0.35, "vitesse": 0.20},
+    "occasion_attaque":    {"vision": 0.50, "technique": 0.30, "passe": 0.20},
+    "occasion_defense":    {"placement": 0.60, "tacle": 0.40},
+    "tir":                 {"finition": 0.60, "sang_froid": 0.25, "technique": 0.15},
+    "arret":               {"reflexes": 0.70, "placement": 0.30},
+    "tete":                {"jeu_tete": 0.65, "placement": 0.20, "sang_froid": 0.15},
+    "sortie":              {"sorties": 0.60, "placement": 0.40}
+  },
+  "note_globale": {
+    "_note": "Ponderation par poste pour calculer la note affichee et la valorisation",
+    "GB":   {"reflexes": 0.40, "sorties": 0.25, "placement": 0.20, "relance": 0.15},
+    "DC":   {"tacle": 0.28, "placement": 0.28, "jeu_tete": 0.20, "vitesse": 0.14, "passe": 0.10},
+    "DL":   {"vitesse": 0.24, "tacle": 0.22, "placement": 0.20, "passe": 0.18, "endurance": 0.16},
+    "DR":   {"vitesse": 0.24, "tacle": 0.22, "placement": 0.20, "passe": 0.18, "endurance": 0.16},
+    "MDC":  {"tacle": 0.26, "placement": 0.24, "passe": 0.24, "vision": 0.14, "endurance": 0.12},
+    "MC":   {"passe": 0.30, "vision": 0.24, "technique": 0.18, "endurance": 0.16, "tacle": 0.12},
+    "MOC":  {"vision": 0.32, "technique": 0.26, "passe": 0.22, "finition": 0.12, "sang_froid": 0.08},
+    "AILG": {"vitesse": 0.28, "technique": 0.26, "passe": 0.18, "finition": 0.16, "endurance": 0.12},
+    "AILD": {"vitesse": 0.28, "technique": 0.26, "passe": 0.18, "finition": 0.16, "endurance": 0.12},
+    "BU":   {"finition": 0.38, "sang_froid": 0.20, "technique": 0.16, "jeu_tete": 0.14, "vitesse": 0.12}
+  },
+  "profils_generation": {
+    "_note": "Decalages en points par rapport au niveau cible, avant bruit gaussien. Cle _autres = decalage applique a tout attribut non liste explicitement pour ce poste.",
+    "bruit_ecart_type": 6.0,
+    "profils": {
+      "GB":   {"reflexes": 15, "sorties": 12, "relance": 8, "_autres": -25},
+      "DC":   {"tacle": 12, "placement": 10, "jeu_tete": 10, "finition": -18, "vision": -8},
+      "DL":   {"vitesse": 10, "endurance": 8, "passe": 5, "finition": -15, "jeu_tete": -8},
+      "DR":   {"vitesse": 10, "endurance": 8, "passe": 5, "finition": -15, "jeu_tete": -8},
+      "MDC":  {"tacle": 10, "placement": 10, "passe": 8, "finition": -12},
+      "MC":   {"passe": 12, "vision": 8, "endurance": 8, "jeu_tete": -6},
+      "MOC":  {"vision": 14, "technique": 12, "passe": 8, "tacle": -15},
+      "AILG": {"vitesse": 14, "technique": 12, "tacle": -12, "jeu_tete": -8},
+      "AILD": {"vitesse": 14, "technique": 12, "tacle": -12, "jeu_tete": -8},
+      "BU":   {"finition": 16, "sang_froid": 10, "jeu_tete": 6, "tacle": -18, "placement": -10}
+    }
+  },
+  "malus_hors_poste": {
+    "_note": "malus = base + facteur * affinite. Affinite 0 pour un poste totalement etranger.",
+    "base": 0.70,
+    "facteur": 0.30
+  }
+}

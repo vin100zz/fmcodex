@@ -1,0 +1,62 @@
+{
+  "fatigue": {
+    "consommation_par_minute": 0.0042,
+    "resistance_base": 0.7,
+    "resistance_facteur_endurance": 0.6,
+    "intensite_par_hauteur_bloc": {"bloc_bas": 0.85, "equilibre": 1.0, "pressing_haut": 1.20},
+    "recuperation_base_par_jour": 0.10,
+    "recuperation_facteur_endurance": 0.05,
+    "facteur_age_jeune": 1.15, "seuil_age_jeune": 24,
+    "facteur_age_vieux": 0.85, "seuil_age_vieux": 31,
+    "seuil_alerte": 0.55,
+    "fatigue_retour_de_blessure": 0.5
+  },
+  "blessures": {
+    "probabilite_base_par_possession": 0.00019,
+    "facteur_fatigue_max": 1.9,
+    "fragilite_min": 0.6, "fragilite_max": 1.8,
+    "probabilite_quotidienne_hors_match": 0.00035,
+    "gravites": [
+      {"nom": "legere",    "part": 0.55, "jours_min": 3,   "jours_max": 10},
+      {"nom": "moyenne",   "part": 0.32, "jours_min": 14,  "jours_max": 42},
+      {"nom": "grave",     "part": 0.11, "jours_min": 60,  "jours_max": 150},
+      {"nom": "tres_grave","part": 0.02, "jours_min": 180, "jours_max": 365}
+    ],
+    "penalite_permanente": {
+      "duree_minimale_jours": 90, "age_minimal": 30,
+      "points_min": 2, "points_max": 5,
+      "attributs_touches": ["vitesse", "endurance"]
+    },
+    "forme_retour_de_blessure": 0.85
+  },
+  "suspensions": {
+    "matches_rouge_min": 1, "matches_rouge_max": 3,
+    "matches_double_jaune": 1,
+    "seuils_cumul_jaunes": [{"jaunes": 5, "matches": 1}, {"jaunes": 10, "matches": 2}],
+    "remise_a_zero_fin_saison": true
+  },
+  "forme": {
+    "min": 0.7, "max": 1.3, "initiale": 1.0,
+    "note_reference": 6.5,
+    "sensibilite_note": 0.06,
+    "vitesse_convergence": 0.25,
+    "bruit_ecart_type": 0.03
+  },
+  "moral": {
+    "min": 0.0, "max": 1.0, "initial": 0.6,
+    "amplitude_effet_match": 0.05,
+    "poids_temps_de_jeu": 0.45,
+    "poids_resultats_club": 0.30,
+    "poids_satisfaction_contrat": 0.25,
+    "vitesse_derive": 0.08
+  },
+  "remplacements": {
+    "premiere_minute_evaluation": 55,
+    "intervalle_evaluation_minutes": 5,
+    "seuil_fatigue_declenchement": 0.50,
+    "seuil_fatigue_joueur_averti": 0.60,
+    "ecart_niveau_acceptable_remplacant": 6.0,
+    "minutes_restantes_ajustement_tactique": 20,
+    "ecart_buts_ajustement_defensif": 2
+  }
+}
