@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from api.persistence import list_slots, load_session, save_session
 from api.session import GameSession
 
 
@@ -12,9 +13,14 @@ class AdvanceRequest(BaseModel):
     jusqu_a: str
 
 
+class SlotRequest(BaseModel):
+    slot: str
+
+
 def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
     """Create the HTTP facade; simulation state remains owned by one session."""
     session = GameSession.create(workspace / "config", workspace / "data", seed)
+    saves_directory = workspace / "saves"
     app = FastAPI(title="Football Manager Light", version="0.1.0")
 
     @app.get("/api/monde/etat")
@@ -23,10 +29,15 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
 
     @app.post("/api/monde/avancer")
     def advance(request: AdvanceRequest) -> dict[str, object]:
-        if request.jusqu_a != "journee":
-            raise HTTPException(status_code=422, detail="Only 'journee' is available in v1")
         try:
-            session.advance_round(seed)
+            if request.jusqu_a == "jour":
+                session.advance_day()
+            elif request.jusqu_a == "journee":
+                session.advance_round()
+            elif request.jusqu_a == "fin_saison":
+                session.complete_current_season()
+            else:
+                raise HTTPException(status_code=422, detail="Use 'jour', 'journee' or 'fin_saison'")
         except ValueError as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         return session.world_state()
@@ -49,6 +60,15 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
         except KeyError as error:
             raise HTTPException(status_code=404, detail="Competition not found") from error
 
+    @app.get("/api/competitions/{competition_id}/statistiques")
+    def competition_statistics(competition_id: int, type: str = "buteurs") -> list[dict[str, object]]:
+        try:
+            return session.competition_statistics(competition_id, type)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Competition not found") from error
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
     @app.get("/api/clubs/{club_id}/effectif")
     def roster(club_id: int) -> list[dict[str, object]]:
         try:
@@ -56,4 +76,32 @@ def create_app(workspace: Path, seed: int = 20260910) -> FastAPI:
         except KeyError as error:
             raise HTTPException(status_code=404, detail="Active club not found") from error
 
+    @app.post("/api/partie/sauvegarder")
+    def save(request: SlotRequest) -> dict[str, str]:
+        path = _slot_path(saves_directory, request.slot)
+        save_session(session, path)
+        return {"slot": request.slot}
+
+    @app.post("/api/partie/charger")
+    def load(request: SlotRequest) -> dict[str, object]:
+        nonlocal session
+        path = _slot_path(saves_directory, request.slot)
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="Save slot not found")
+        try:
+            session = load_session(workspace / "config", workspace / "data", path)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return session.world_state()
+
+    @app.get("/api/partie/slots")
+    def slots() -> list[str]:
+        return list(list_slots(saves_directory))
+
     return app
+
+
+def _slot_path(directory: Path, slot: str) -> Path:
+    if not slot or slot != Path(slot).name or any(character in slot for character in "\\/"):
+        raise HTTPException(status_code=422, detail="Invalid save slot")
+    return directory / f"{slot}.json.gz"

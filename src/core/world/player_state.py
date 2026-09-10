@@ -269,6 +269,16 @@ def suspension_served_events(
     )
 
 
+def reset_season_discipline(states: dict[int, PlayerState], config: GameConfig) -> dict[int, PlayerState]:
+    """Reset only the configured season-long yellow-card counters."""
+    if not config.suspension_state.remise_a_zero_fin_saison:
+        return dict(states)
+    return {
+        player_id: _replace_state(state, yellow_cards=0)
+        for player_id, state in states.items()
+    }
+
+
 def _block_intensity(height: float, config: GameConfig) -> float:
     intensities = config.fatigue_state.intensite_par_hauteur_bloc
     if height <= 0:

@@ -3,4 +3,7 @@ def create_app(*args, **kwargs):
 
     return factory(*args, **kwargs)
 
-__all__ = ["create_app"]
+
+from api.persistence import list_slots, load_session, save_session
+
+__all__ = ["create_app", "list_slots", "load_session", "save_session"]

@@ -33,6 +33,7 @@ from core.world.player_state import (
     recovery_events,
     recover_to_date,
     roll_match_injury,
+    reset_season_discipline,
     suspension_served_events,
 )
 from core.world.demography import (
@@ -89,6 +90,7 @@ __all__ = [
     "recovery_events",
     "recover_to_date",
     "roll_match_injury",
+    "reset_season_discipline",
     "suspension_served_events",
     "CareerPlayer",
     "NameEntry",

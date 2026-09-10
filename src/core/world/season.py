@@ -47,6 +47,8 @@ class SeasonPlan:
 class PlayedFixture:
     fixture: Fixture
     result: PossessionMatchResult
+    home_player_ids: tuple[int, ...] = ()
+    away_player_ids: tuple[int, ...] = ()
 
     def as_played_match(self) -> PlayedMatch:
         return PlayedMatch(
@@ -71,7 +73,11 @@ class StatefulPlayedRound:
 
 
 def create_season_plan(
-    report: ImportReport, players: dict[int, GeneratedPlayer], config: GameConfig, rng: Random
+    report: ImportReport,
+    players: dict[int, GeneratedPlayer],
+    config: GameConfig,
+    rng: Random,
+    start_date: GameDate | None = None,
 ) -> SeasonPlan:
     """Create every v1 league calendar and its initial, deterministic lineups."""
     if config.world.saison.matches_par_adversaire != 2:
@@ -81,7 +87,7 @@ def create_season_plan(
         if club.status.value == "active" and club.division_id is not None:
             active_by_division[club.division_id].append(club.id)
 
-    start_date = GameDate(
+    start_date = start_date or GameDate(
         year=config.world.date_depart.annee,
         month=config.world.date_depart.mois,
         day=config.world.date_depart.jour,
@@ -165,7 +171,14 @@ def play_round_with_player_states(
             home = _available_lineup(plan, fixture.home_club_id, player_states, fixture.date, config)
             away = _available_lineup(plan, fixture.away_club_id, player_states, fixture.date, config)
             result = engine.simulate(home=home, away=away, rng=rng)
-            played.append(PlayedFixture(fixture=fixture, result=result))
+            played.append(
+                PlayedFixture(
+                    fixture=fixture,
+                    result=result,
+                    home_player_ids=tuple(player.id for player in home.players),
+                    away_player_ids=tuple(player.id for player in away.players),
+                )
+            )
             events.extend(fatigue_events_for_lineup(home, config))
             events.extend(fatigue_events_for_lineup(away, config))
             events.extend(disciplinary_events(result.events, player_states, config, rng))

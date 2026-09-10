@@ -11,6 +11,7 @@ from core.world import (
     disciplinary_events,
     fatigue_events_for_lineup,
     recovery_events,
+    reset_season_discipline,
     suspension_served_events,
 )
 from benchmarks.synthetic import synthetic_lineup
@@ -85,3 +86,20 @@ class PlayerStateTests(unittest.TestCase):
         updated = apply_player_state_events(states, events, self.config)
 
         self.assertTrue(updated[1].is_available(GameDate(2026, 8, 10)))
+
+    def test_season_reset_clears_yellows_but_not_a_suspension(self) -> None:
+        states = {
+            1: PlayerState(
+                fatigue=1.0,
+                form=1.0,
+                morale=0.6,
+                fragility=1.0,
+                yellow_cards=5,
+                suspension_matches_remaining=2,
+            )
+        }
+
+        reset = reset_season_discipline(states, self.config)
+
+        self.assertEqual(reset[1].yellow_cards, 0)
+        self.assertEqual(reset[1].suspension_matches_remaining, 2)
