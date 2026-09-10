@@ -314,6 +314,7 @@ def _validate_management(document: object) -> ManagementConfig:
             "budgets": root["budgets"],
             "garde_fous": root["garde_fous"],
             "roster_target": _roster_target_payload(root["profil_cible"]),
+            "market": _market_payload(root["mercato"]),
         }
         management = TypeAdapter(ManagementConfig).validate_python(payload)
     except (KeyError, ValidationError) as error:
@@ -345,6 +346,25 @@ def _roster_target_payload(value: object) -> dict[str, object]:
         }
     except KeyError as error:
         raise ConfigError(f"Invalid ia_gestion.json roster target configuration: {error}") from error
+
+
+def _market_payload(value: object) -> dict[str, object]:
+    source = _mapping(value, "ia_gestion.mercato")
+    try:
+        return {
+            key: source[key]
+            for key in (
+                "negociations_actives_max",
+                "taille_shortlist",
+                "seuil_vendeur_multiplicateur",
+                "seuil_vendeur_reduction_surplus",
+                "poids_patience_negociation",
+                "ratio_contre_offre",
+                "score_joueur",
+            )
+        }
+    except KeyError as error:
+        raise ConfigError(f"Invalid ia_gestion.json market configuration: {error}") from error
 
 
 def _attribute_names(document: object) -> set[str]:

@@ -349,12 +349,33 @@ class RosterTargetConfig:
     effectif_par_poste: dict[str, PositionDepthTargetConfig]
 
 
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class OfferScoreConfig:
+    poids_salaire: float = Field(ge=0)
+    poids_temps_de_jeu: float = Field(ge=0)
+    poids_reputation_club: float = Field(ge=0)
+    poids_ambition: float = Field(ge=0)
+    bruit_ecart_type: float = Field(ge=0)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True, config=ConfigDict(extra="forbid"))
+class MarketConfig:
+    negociations_actives_max: int = Field(gt=0)
+    taille_shortlist: int = Field(gt=0)
+    seuil_vendeur_multiplicateur: float = Field(gt=0)
+    seuil_vendeur_reduction_surplus: float = Field(ge=0)
+    poids_patience_negociation: float = Field(ge=0)
+    ratio_contre_offre: float = Field(gt=0)
+    score_joueur: OfferScoreConfig
+
+
 @dataclass(frozen=True, slots=True)
 class ManagementConfig:
     valuation: PlayerValuationConfig
     budgets: ClubBudgetConfig
     garde_fous: RosterGuardConfig
     roster_target: RosterTargetConfig
+    market: MarketConfig
 
 
 @dataclass(frozen=True, slots=True)
